@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "278245411954",
+    "project_id": "draftein",
+    "storage_bucket": "draftein.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:278245411954:android:05593693721f9268a306eb",
+        "android_client_info": {
+          "package_name": "com.draftien.teacher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "278245411954-rg7tuvi14arcq380isis48qh3m32g204.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd9OMz7oZQDcxk7ev_zyBmDHIcx5-UJF8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "278245411954-rg7tuvi14arcq380isis48qh3m32g204.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "278245411954-0jnevkelfcm0vio574rcvt4g5da7f63b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.draftien.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

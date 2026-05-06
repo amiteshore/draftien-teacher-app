@@ -1,0 +1,306 @@
+import { useCourse, useUpdateCourse } from "@/lib/hooks";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+type CourseFormData = {
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  category: string;
+  price: string;
+  durationHours: string;
+  level: "beginner" | "intermediate" | "advanced";
+  isPublished: boolean;
+};
+
+export default function EditCourse() {
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { data: course, isLoading } = useCourse(id);
+  const updateCourse = useUpdateCourse(id || "");
+  const [formData, setFormData] = useState<CourseFormData>({
+    title: "",
+    description: "",
+    thumbnailUrl: "",
+    category: "",
+    price: "",
+    durationHours: "",
+    level: "beginner",
+    isPublished: false,
+  });
+
+  useEffect(() => {
+    if (course) {
+      setFormData({
+        title: course.title || "",
+        description: course.description || "",
+        thumbnailUrl: course.thumbnailUrl || "",
+        category: course.category || "",
+        price: course.price !== undefined ? course.price.toString() : "",
+        durationHours: course.durationHours ? course.durationHours.toString() : "",
+        level: (course.level as "beginner" | "intermediate" | "advanced") || "beginner",
+        isPublished: course.isPublished || false,
+      });
+    }
+  }, [course]);
+
+  const handleSubmit = async () => {
+    // Validation
+    if (!formData.title.trim()) {
+      Alert.alert("Validation Error", "Course title is required");
+      return;
+    }
+
+    try {
+      const payload: {
+        title?: string;
+        description?: string;
+        thumbnailUrl?: string;
+        category?: string;
+        price?: number;
+        durationHours?: number;
+        level?: string;
+        isPublished?: boolean;
+      } = {};
+
+      if (formData.title.trim()) {
+        payload.title = formData.title.trim();
+      }
+
+      if (formData.description.trim()) {
+        payload.description = formData.description.trim();
+      }
+
+      if (formData.thumbnailUrl.trim()) {
+        payload.thumbnailUrl = formData.thumbnailUrl.trim();
+      }
+
+      if (formData.category.trim()) {
+        payload.category = formData.category.trim();
+      }
+
+      if (formData.price.trim()) {
+        const priceNum = Number.parseFloat(formData.price);
+        if (Number.isFinite(priceNum) && priceNum >= 0) {
+          payload.price = priceNum;
+        }
+      }
+
+      if (formData.thumbnailUrl.trim()) {
+        payload.thumbnailUrl = formData.thumbnailUrl.trim();
+      }
+
+      if (formData.category.trim()) {
+        payload.category = formData.category.trim();
+      }
+
+      if (formData.price.trim()) {
+        const priceNum = Number.parseFloat(formData.price);
+        if (Number.isFinite(priceNum) && priceNum >= 0) {
+          payload.price = priceNum;
+        }
+      }
+
+      if (formData.durationHours.trim()) {
+        const durationNum = Number.parseInt(formData.durationHours, 10);
+        if (Number.isFinite(durationNum) && durationNum > 0) {
+          payload.durationHours = durationNum;
+        }
+      }
+
+      payload.level = formData.level;
+      payload.isPublished = formData.isPublished;
+
+      await updateCourse.mutateAsync(payload);
+      router.back();
+    } catch (error) {
+      const errorMessage =
+        error && typeof error === "object" && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+
+      Alert.alert("Error", errorMessage || "Failed to update course. Please try again.");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            title: "Edit Course",
+            headerBackTitle: "Back",
+          }}
+        />
+        <View className="flex-1 bg-white items-center justify-center">
+          <ActivityIndicator size="large" color="#2563EB" />
+        </View>
+      </>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      className="flex-1 bg-white"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+        {/* Title */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-2">
+            Title <Text className="text-red-600">*</Text>
+          </Text>
+          <TextInput
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholder="Enter course title"
+            value={formData.title}
+            onChangeText={(text) => setFormData({ ...formData, title: text })}
+            maxLength={255}
+          />
+        </View>
+
+        {/* Description */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Description</Text>
+          <TextInput
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholder="Enter course description"
+            value={formData.description}
+            onChangeText={(text) => setFormData({ ...formData, description: text })}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+        </View>
+
+        {/* Thumbnail URL */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Thumbnail URL</Text>
+          <TextInput
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholder="https://example.com/image.jpg"
+            value={formData.thumbnailUrl}
+            onChangeText={(text) => setFormData({ ...formData, thumbnailUrl: text })}
+            keyboardType="url"
+            autoCapitalize="none"
+          />
+        </View>
+
+        {/* Category */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Category</Text>
+          <View className="flex-row gap-2">
+            {(["JEE", "NEET"] as const).map((cat) => (
+              <Pressable
+                key={cat}
+                onPress={() => setFormData({ ...formData, category: cat })}
+                className={`flex-1 py-3 rounded-xl border ${
+                  formData.category === cat
+                    ? "bg-blue-600 border-blue-600"
+                    : "bg-white border-gray-300"
+                }`}
+              >
+                <Text
+                  className={`text-center font-semibold ${
+                    formData.category === cat ? "text-white" : "text-gray-700"
+                  }`}
+                >
+                  {cat}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* Price */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Price (₹)</Text>
+          <TextInput
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholder="0"
+            value={formData.price}
+            onChangeText={(text) => setFormData({ ...formData, price: text })}
+            keyboardType="decimal-pad"
+          />
+        </View>
+
+        {/* Duration Hours */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Duration (Hours)</Text>
+          <TextInput
+            className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholder="e.g., 10"
+            value={formData.durationHours}
+            onChangeText={(text) => setFormData({ ...formData, durationHours: text })}
+            keyboardType="number-pad"
+          />
+        </View>
+
+        {/* Level */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Level</Text>
+          <View className="flex-row gap-2">
+            {(["beginner", "intermediate", "advanced"] as const).map((level) => (
+              <Pressable
+                key={level}
+                onPress={() => setFormData({ ...formData, level })}
+                className={`flex-1 py-3 rounded-xl border ${
+                  formData.level === level
+                    ? "bg-blue-600 border-blue-600"
+                    : "bg-white border-gray-300"
+                }`}
+              >
+                <Text
+                  className={`text-center font-medium capitalize ${
+                    formData.level === level ? "text-white" : "text-gray-700"
+                  }`}
+                >
+                  {level}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* Published Toggle */}
+        <View className="mb-6 flex-row items-center justify-between bg-gray-50 rounded-xl p-4">
+          <View className="flex-1">
+            <Text className="text-base font-medium text-gray-900">Publish Course</Text>
+            <Text className="text-sm text-gray-600 mt-1">Make this course visible to students</Text>
+          </View>
+          <Switch
+            value={formData.isPublished}
+            onValueChange={(value) => setFormData({ ...formData, isPublished: value })}
+            trackColor={{ false: "#D1D5DB", true: "#3B82F6" }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
+        {/* Submit Button */}
+        <Pressable
+          onPress={handleSubmit}
+          disabled={updateCourse.isPending}
+          className={`py-4 rounded-xl items-center ${updateCourse.isPending ? "bg-blue-400" : "bg-blue-600"}`}
+        >
+          {updateCourse.isPending ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text className="text-white font-semibold text-base">Update Course</Text>
+          )}
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
