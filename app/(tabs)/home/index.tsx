@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { useCourses, useUpcomingLiveClasses } from "@/lib/hooks";
+import { useTeacherDashboard } from "@/lib/hooks/useAnalytics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -8,72 +8,143 @@ import { useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   View,
 } from "react-native";
 
-// Configure notification behavior
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
 const NOTIFICATION_PERMISSION_KEY = "notification_permission_requested";
 
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good Morning";
+  if (h < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
+function getInitials(name?: string | null) {
+  if (!name) return "T";
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function formatScheduledAt(dateStr: string) {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const time = date.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
+  if (date.toDateString() === today.toDateString()) return `Today · ${time}`;
+  if (date.toDateString() === tomorrow.toDateString()) return `Tomorrow · ${time}`;
+  return date.toLocaleDateString("en-IN", { month: "short", day: "numeric" }) + ` · ${time}`;
+}
+
+function formatEnrolledAt(dateStr: string) {
+  const date = new Date(dateStr);
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return date.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+}
+
+// ─────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────
+
+function StatCard({
+  icon,
+  iconBg,
+  iconColor,
+  value,
+  label,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  iconBg: string;
+  iconColor: string;
+  value: string | number;
+  label: string;
+}) {
+  return (
+    <View className="flex-1 bg-white rounded-2xl p-4 border border-gray-100">
+      <View
+        className="w-10 h-10 rounded-full items-center justify-center mb-3"
+        style={{ backgroundColor: iconBg }}
+      >
+        <Ionicons name={icon} size={20} color={iconColor} />
+      </View>
+      <Text className="text-2xl font-bold text-gray-900">{value}</Text>
+      <Text className="text-xs text-gray-500 mt-0.5">{label}</Text>
+    </View>
+  );
+}
+
+function SectionHeader({ title, onPress }: { title: string; onPress?: () => void }) {
+  return (
+    <View className="flex-row items-center justify-between mb-3">
+      <Text className="text-base font-bold text-gray-900">{title}</Text>
+      {onPress && (
+        <Pressable onPress={onPress} hitSlop={8}>
+          <Text className="text-sm font-semibold text-blue-600">See all</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Screen
+// ─────────────────────────────────────────────
+
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { data: coursesData, isLoading: coursesLoading } = useCourses();
-  const { data: liveClassesData, isLoading: liveClassesLoading } = useUpcomingLiveClasses(5);
-
-  const courses = coursesData?.data || [];
-  const liveClasses = liveClassesData?.data || [];
+  const { data, isLoading, error, refetch, isRefetching } = useTeacherDashboard();
 
   useEffect(() => {
-    checkAndRequestNotificationPermission();
+    requestNotificationPermission();
   }, []);
 
-  const checkAndRequestNotificationPermission = async () => {
+  const requestNotificationPermission = async () => {
     try {
       const hasAsked = await SecureStore.getItemAsync(NOTIFICATION_PERMISSION_KEY);
       if (hasAsked === "true") return;
-
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-
-      if (existingStatus === "granted") {
+      const { status: existing } = await Notifications.getPermissionsAsync();
+      if (existing === "granted") {
         await SecureStore.setItemAsync(NOTIFICATION_PERMISSION_KEY, "true");
-        await setupPushNotifications();
+        await setupPushToken();
         return;
       }
-
-      if (existingStatus === "undetermined") {
+      if (existing === "undetermined") {
         const { status } = await Notifications.requestPermissionsAsync();
         await SecureStore.setItemAsync(NOTIFICATION_PERMISSION_KEY, "true");
-
-        if (status === "granted") {
-          await setupPushNotifications();
-        } else {
-          Alert.alert(
-            "Notifications Disabled",
-            "You can enable notifications later in your device settings.",
-          );
-        }
+        if (status === "granted") await setupPushToken();
       } else {
         await SecureStore.setItemAsync(NOTIFICATION_PERMISSION_KEY, "true");
       }
-    } catch (error) {
-      console.error("Error checking notification permission:", error);
-    }
+    } catch {}
   };
 
-  const setupPushNotifications = async () => {
+  const setupPushToken = async () => {
     try {
       if (Platform.OS === "android") {
         await Notifications.setNotificationChannelAsync("default", {
@@ -83,260 +154,361 @@ export default function HomeScreen() {
           lightColor: "#2563EB",
         });
       }
-
-      const token = await Notifications.getExpoPushTokenAsync({
+      await Notifications.getExpoPushTokenAsync({
         projectId: "3f94cb48-48e1-42a0-bcb9-b202c4e730a2",
       });
-
-      console.log("Push token:", token.data);
-      // TODO: Send token to backend
-    } catch (error) {
-      console.error("Error setting up push notifications:", error);
-    }
+    } catch {}
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
-  };
-
-  const getInitials = () => {
-    if (!user?.name) return "T";
-    const names = user.name.trim().split(" ");
-    if (names.length === 1) return names[0].charAt(0).toUpperCase();
-    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
-  };
-
-  // Calculate stats
-  const totalCourses = courses.length;
-  const publishedCourses = courses.filter((c) => c.isPublished).length;
-  const draftCourses = courses.filter((c) => !c.isPublished).length;
-  const totalValue = courses.reduce((sum, c) => sum + (c.price || 0), 0);
-
-  // Get recent 3 courses
-  const recentCourses = courses.slice(0, 3);
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const isToday = date.toDateString() === today.toDateString();
-    const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
-    const time = date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    if (isToday) return `Today at ${time}`;
-    if (isTomorrow) return `Tomorrow at ${time}`;
-
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  const summary = data?.summary;
+  const courses = data?.courses ?? [];
+  const recentEnrollments = data?.recentEnrollments ?? [];
+  const upcomingLiveClasses = data?.upcomingLiveClasses ?? [];
+  const atRiskStudents = data?.atRiskStudents ?? [];
+  const quizStats = data?.quizStats ?? [];
+  const recentQuizAttempts = data?.recentQuizAttempts ?? [];
 
   return (
     <ScrollView
       className="flex-1 bg-[#F6F8FC]"
       contentContainerStyle={{ paddingBottom: 100 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />
+      }
     >
-      {/* Greeting Section */}
-      <View className="bg-white px-6 py-6">
+      {/* ── Header ── */}
+      <View className="bg-white px-5 pt-5 pb-5">
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
             <Text className="text-sm text-gray-500">{getGreeting()}</Text>
-            <Text className="text-2xl font-bold text-gray-900 mt-1">
+            <Text className="text-2xl font-bold text-gray-900 mt-0.5">
               {user?.name || "Teacher"}
             </Text>
           </View>
-          <View className="w-14 h-14 rounded-full bg-blue-600 items-center justify-center">
-            <Text className="text-white text-lg font-bold">{getInitials()}</Text>
+          <View className="w-12 h-12 rounded-full bg-blue-600 items-center justify-center">
+            <Text className="text-white text-base font-bold">{getInitials(user?.name)}</Text>
           </View>
         </View>
       </View>
 
-      {/* Stats Cards */}
-      <View className="px-4 mt-4">
-        {coursesLoading ? (
-          <View className="py-8 items-center">
-            <ActivityIndicator size="large" color="#2563EB" />
-          </View>
-        ) : (
-          <View className="flex-row flex-wrap gap-3">
-            <View className="flex-1 min-w-[45%] bg-white rounded-2xl p-4 border border-gray-100">
-              <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mb-2">
-                <Ionicons name="book" size={20} color="#2563EB" />
-              </View>
-              <Text className="text-2xl font-bold text-gray-900">{totalCourses}</Text>
-              <Text className="text-sm text-gray-600 mt-1">Total Courses</Text>
-            </View>
-
-            <View className="flex-1 min-w-[45%] bg-white rounded-2xl p-4 border border-gray-100">
-              <View className="w-10 h-10 rounded-full bg-green-100 items-center justify-center mb-2">
-                <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-              </View>
-              <Text className="text-2xl font-bold text-gray-900">{publishedCourses}</Text>
-              <Text className="text-sm text-gray-600 mt-1">Published</Text>
-            </View>
-
-            <View className="flex-1 min-w-[45%] bg-white rounded-2xl p-4 border border-gray-100">
-              <View className="w-10 h-10 rounded-full bg-yellow-100 items-center justify-center mb-2">
-                <Ionicons name="create" size={20} color="#F59E0B" />
-              </View>
-              <Text className="text-2xl font-bold text-gray-900">{draftCourses}</Text>
-              <Text className="text-sm text-gray-600 mt-1">Drafts</Text>
-            </View>
-
-            <View className="flex-1 min-w-[45%] bg-white rounded-2xl p-4 border border-gray-100">
-              <View className="w-10 h-10 rounded-full bg-purple-100 items-center justify-center mb-2">
-                <Ionicons name="cash" size={20} color="#8B5CF6" />
-              </View>
-              <Text className="text-2xl font-bold text-gray-900">₹{totalValue}</Text>
-              <Text className="text-sm text-gray-600 mt-1">Total Value</Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Upcoming Live Classes */}
-      {!liveClassesLoading && liveClasses.length > 0 && (
-        <View className="px-4 mt-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-lg font-bold text-gray-900">Upcoming Live Classes</Text>
-          </View>
-
-          {liveClasses.map((liveClass) => (
-            <View key={liveClass.id} className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-              <View className="flex-row items-start">
-                <View className="w-12 h-12 rounded-full bg-red-100 items-center justify-center mr-3">
-                  <Ionicons name="videocam" size={24} color="#EF4444" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-base font-semibold text-gray-900 mb-1">
-                    {liveClass.title}
-                  </Text>
-                  <Text className="text-sm text-gray-600 mb-1">{liveClass.courseTitle}</Text>
-                  <View className="flex-row items-center mb-3">
-                    <Ionicons name="time-outline" size={14} color="#6B7280" />
-                    <Text className="text-xs text-gray-500 ml-1">
-                      {formatDateTime(liveClass.scheduledAt)} • {liveClass.durationMinutes} min
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={() => {
-                      // TODO: Implement join live class
-                      Alert.alert("Join Live Class", "Live class feature coming soon");
-                    }}
-                    className="bg-red-600 py-2 rounded-lg items-center"
-                  >
-                    <Text className="text-white font-semibold text-sm">Join Class</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-          ))}
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center py-24">
+          <ActivityIndicator size="large" color="#2563EB" />
+          <Text className="text-sm text-gray-500 mt-3">Loading dashboard…</Text>
         </View>
-      )}
-
-      {/* Recent Courses */}
-      {!coursesLoading && recentCourses.length > 0 && (
-        <View className="px-4 mt-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-lg font-bold text-gray-900">Recent Courses</Text>
-            <Pressable onPress={() => router.push("/(tabs)/courses")}>
-              <Text className="text-sm font-semibold text-blue-600">View All</Text>
-            </Pressable>
+      ) : error ? (
+        <View className="mx-4 mt-6 bg-white rounded-2xl p-6 items-center">
+          <Ionicons name="cloud-offline-outline" size={40} color="#EF4444" />
+          <Text className="text-base font-semibold text-gray-900 mt-3">Failed to load</Text>
+          <Pressable onPress={() => refetch()} className="mt-4 bg-blue-600 px-6 py-2.5 rounded-xl">
+            <Text className="text-white font-semibold">Retry</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <>
+          {/* ── Summary stats ── */}
+          <View className="px-4 mt-4">
+            <View className="flex-row gap-3 mb-3">
+              <StatCard
+                icon="book"
+                iconBg="#DBEAFE"
+                iconColor="#2563EB"
+                value={summary?.totalCourses ?? 0}
+                label="Total Courses"
+              />
+              <StatCard
+                icon="people"
+                iconBg="#D1FAE5"
+                iconColor="#059669"
+                value={summary?.totalStudents ?? 0}
+                label="Total Students"
+              />
+            </View>
+            <View className="flex-row gap-3">
+              <StatCard
+                icon="checkmark-circle"
+                iconBg="#FEF3C7"
+                iconColor="#D97706"
+                value={summary?.publishedCourses ?? 0}
+                label="Published"
+              />
+              <StatCard
+                icon="trending-up"
+                iconBg="#EDE9FE"
+                iconColor="#7C3AED"
+                value={`${(summary?.avgCompletion ?? 0).toFixed(1)}%`}
+                label="Avg Completion"
+              />
+            </View>
           </View>
 
-          {recentCourses.map((course) => (
-            <Pressable
-              key={course.id}
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/courses/details",
-                  params: { id: course.id },
-                })
-              }
-              className="bg-white rounded-2xl mb-3 overflow-hidden border border-gray-100"
-            >
-              {course.thumbnailUrl ? (
-                <Image
-                  source={{ uri: course.thumbnailUrl }}
-                  style={{ width: "100%", height: 120 }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="w-full h-32 bg-gray-200 items-center justify-center">
-                  <Ionicons name="image-outline" size={48} color="#9CA3AF" />
-                </View>
-              )}
-              <View className="p-4">
-                <Text className="text-base font-semibold text-gray-900 mb-2">
-                  {course.title}
-                </Text>
-                <View className="flex-row items-center flex-wrap gap-2">
-                  <View
-                    className={`px-2 py-1 rounded-full ${
-                      course.isPublished ? "bg-green-100" : "bg-yellow-100"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-medium ${
-                        course.isPublished ? "text-green-700" : "text-yellow-700"
-                      }`}
-                    >
-                      {course.isPublished ? "Published" : "Draft"}
-                    </Text>
+          {/* ── Upcoming live classes ── */}
+          {upcomingLiveClasses.length > 0 && (
+            <View className="px-4 mt-6">
+              <SectionHeader title="Upcoming Live Classes" />
+              {upcomingLiveClasses.map((lc) => (
+                <View
+                  key={lc.id}
+                  className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 flex-row items-start"
+                >
+                  <View className="w-10 h-10 rounded-full bg-red-100 items-center justify-center mr-3 mt-0.5">
+                    <Ionicons name="videocam" size={18} color="#EF4444" />
                   </View>
-                  {course.category && (
-                    <View className="px-2 py-1 rounded-full bg-blue-100">
-                      <Text className="text-xs font-medium text-blue-700">{course.category}</Text>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-gray-900" numberOfLines={1}>
+                      {lc.title}
+                    </Text>
+                    <Text className="text-sm text-gray-500 mt-0.5" numberOfLines={1}>
+                      {lc.courseTitle}
+                    </Text>
+                    <View className="flex-row items-center mt-2 gap-3">
+                      <View className="flex-row items-center gap-1">
+                        <Ionicons name="time-outline" size={13} color="#6B7280" />
+                        <Text className="text-sm text-gray-500">
+                          {formatScheduledAt(lc.scheduledAt)} · {lc.durationMinutes}m
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center gap-1">
+                        <Ionicons name="person-outline" size={13} color="#6B7280" />
+                        <Text className="text-sm text-gray-500">{lc.rsvpCount} RSVPs</Text>
+                      </View>
                     </View>
-                  )}
-                  {course.price !== undefined && (
-                    <View className="px-2 py-1 rounded-full bg-purple-100">
-                      <Text className="text-xs font-medium text-purple-700">
-                        {course.price === 0 ? "Free" : `₹${course.price}`}
+                  </View>
+                  <View className="px-2 py-1 rounded-full bg-red-50 ml-2">
+                    <Text className="text-sm font-semibold text-red-600 capitalize">
+                      {lc.platform}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* ── Course breakdown ── */}
+          {courses.length > 0 && (
+            <View className="px-4 mt-6">
+              <SectionHeader
+                title="Course Overview"
+                onPress={() => router.push("/(tabs)/courses")}
+              />
+              {courses.map((course) => (
+                <Pressable
+                  key={course.id}
+                  onPress={() =>
+                    router.push({ pathname: "/(tabs)/courses/details", params: { id: course.id } })
+                  }
+                  className="bg-white rounded-2xl p-4 mb-3 border border-gray-100"
+                >
+                  <View className="flex-row items-start justify-between mb-2">
+                    <Text
+                      className="text-base font-semibold text-gray-900 flex-1 mr-2"
+                      numberOfLines={1}
+                    >
+                      {course.title}
+                    </Text>
+                    <View
+                      className={`px-2 py-0.5 rounded-full ${course.isPublished ? "bg-green-100" : "bg-yellow-100"}`}
+                    >
+                      <Text
+                        className={`text-sm font-medium ${course.isPublished ? "text-green-700" : "text-yellow-700"}`}
+                      >
+                        {course.isPublished ? "Live" : "Draft"}
                       </Text>
                     </View>
-                  )}
-                </View>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-      )}
+                  </View>
 
-      {/* Empty State */}
-      {!coursesLoading && courses.length === 0 && (
-        <View className="px-4 mt-6">
-          <View className="bg-white rounded-2xl p-8 items-center">
-            <View className="w-20 h-20 rounded-full bg-blue-100 items-center justify-center mb-4">
-              <Ionicons name="book-outline" size={40} color="#2563EB" />
+                  {/* Progress bar */}
+                  <View className="h-1.5 bg-gray-100 rounded-full mb-2">
+                    <View
+                      className="h-1.5 bg-blue-500 rounded-full"
+                      style={{ width: `${Math.min(course.avgProgress, 100)}%` }}
+                    />
+                  </View>
+
+                  <View className="flex-row items-center gap-4">
+                    <View className="flex-row items-center gap-1">
+                      <Ionicons name="people-outline" size={14} color="#6B7280" />
+                      <Text className="text-sm text-gray-500">{course.enrolledStudents} students</Text>
+                    </View>
+                    <View className="flex-row items-center gap-1">
+                      <Ionicons name="book-outline" size={14} color="#6B7280" />
+                      <Text className="text-sm text-gray-500">{course.lessonCount} lessons</Text>
+                    </View>
+                    <View className="flex-row items-center gap-1">
+                      <Ionicons name="help-circle-outline" size={14} color="#6B7280" />
+                      <Text className="text-sm text-gray-500">{course.quizCount} quizzes</Text>
+                    </View>
+                    <Text className="text-sm text-blue-600 font-semibold ml-auto">
+                      {course.avgProgress.toFixed(0)}% avg
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
             </View>
-            <Text className="text-xl font-bold text-gray-900 mb-2">No Courses Yet</Text>
-            <Text className="text-sm text-gray-600 text-center mb-4">
-              Start creating your first course to share your knowledge with students
-            </Text>
-            <Pressable
-              onPress={() => router.push("/(tabs)/courses/course-form")}
-              className="bg-blue-600 px-6 py-3 rounded-xl"
-            >
-              <Text className="text-white font-semibold">Create Course</Text>
-            </Pressable>
-          </View>
-        </View>
+          )}
+
+          {/* ── Recent enrollments ── */}
+          {recentEnrollments.length > 0 && (
+            <View className="px-4 mt-6">
+              <SectionHeader title="Recent Enrollments" />
+              <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {recentEnrollments.slice(0, 5).map((e, i) => (
+                  <View
+                    key={`${e.studentId}-${e.courseId}`}
+                    className={`flex-row items-center px-4 py-3 ${i < 4 ? "border-b border-gray-50" : ""}`}
+                  >
+                    <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-3">
+                      <Text className="text-xs font-bold text-blue-600">
+                        {getInitials(e.studentName)}
+                      </Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-base font-semibold text-gray-900" numberOfLines={1}>
+                        {e.studentName || e.studentEmail}
+                      </Text>
+                      <Text className="text-sm text-gray-500 mt-0.5" numberOfLines={1}>
+                        {e.courseTitle}
+                      </Text>
+                    </View>
+                    <Text className="text-sm text-gray-400">{formatEnrolledAt(e.enrolledAt)}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* ── Quiz health ── */}
+          {quizStats.length > 0 && (
+            <View className="px-4 mt-6">
+              <SectionHeader title="Quiz Performance" />
+              <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {quizStats.slice(0, 4).map((q, i) => (
+                  <View
+                    key={q.id}
+                    className={`px-4 py-3 ${i < Math.min(quizStats.length, 4) - 1 ? "border-b border-gray-50" : ""}`}
+                  >
+                    <View className="flex-row items-center justify-between mb-1">
+                      <Text className="text-base font-semibold text-gray-900 flex-1 mr-2" numberOfLines={1}>
+                        {q.title}
+                      </Text>
+                      <Text className="text-sm text-gray-500">{q.totalAttempts} attempts</Text>
+                    </View>
+                    <View className="flex-row items-center gap-3">
+                      <View className="flex-1 h-1.5 bg-gray-100 rounded-full">
+                        <View
+                          className="h-1.5 bg-purple-500 rounded-full"
+                          style={{ width: `${Math.min(q.passRate, 100)}%` }}
+                        />
+                      </View>
+                      <Text className="text-sm font-semibold text-purple-600 w-14 text-right">
+                        {q.passRate.toFixed(0)}% pass
+                      </Text>
+                    </View>
+                    <Text className="text-sm text-gray-400 mt-0.5">{q.courseTitle}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* ── At-risk students ── */}
+          {atRiskStudents.length > 0 && (
+            <View className="px-4 mt-6">
+              <SectionHeader title="At-Risk Students" />
+              <View className="bg-white rounded-2xl border border-orange-100 overflow-hidden">
+                <View className="flex-row items-center gap-2 px-4 py-2.5 bg-orange-50 border-b border-orange-100">
+                  <Ionicons name="warning-outline" size={14} color="#D97706" />
+                  <Text className="text-xs text-orange-700 font-medium">
+                    Enrolled 7+ days · 0% progress
+                  </Text>
+                </View>
+                {atRiskStudents.slice(0, 5).map((s, i) => (
+                  <View
+                    key={`${s.studentId}-${s.courseId}`}
+                    className={`flex-row items-center px-4 py-3 ${i < 4 ? "border-b border-gray-50" : ""}`}
+                  >
+                    <View className="w-8 h-8 rounded-full bg-orange-100 items-center justify-center mr-3">
+                      <Text className="text-xs font-bold text-orange-600">
+                        {getInitials(s.studentName)}
+                      </Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
+                        {s.studentName || s.studentEmail}
+                      </Text>
+                      <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={1}>
+                        {s.courseTitle}
+                      </Text>
+                    </View>
+                    <View className="px-2 py-1 rounded-full bg-orange-100">
+                      <Text className="text-xs font-semibold text-orange-700">
+                        {s.daysSinceEnrollment}d
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* ── Recent quiz attempts ── */}
+          {recentQuizAttempts.length > 0 && (
+            <View className="px-4 mt-6">
+              <SectionHeader title="Recent Quiz Attempts" />
+              <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {recentQuizAttempts.slice(0, 5).map((a, i) => (
+                  <View
+                    key={a.id}
+                    className={`flex-row items-center px-4 py-3 ${i < 4 ? "border-b border-gray-50" : ""}`}
+                  >
+                    <View
+                      className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${a.isPassed ? "bg-green-100" : "bg-red-100"}`}
+                    >
+                      <Ionicons
+                        name={a.isPassed ? "checkmark" : "close"}
+                        size={16}
+                        color={a.isPassed ? "#059669" : "#EF4444"}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
+                        {a.studentName || "Student"}
+                      </Text>
+                      <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={1}>
+                        {a.quizTitle} · {a.courseTitle}
+                      </Text>
+                    </View>
+                    <Text
+                      className={`text-sm font-bold ${a.isPassed ? "text-green-600" : "text-red-500"}`}
+                    >
+                      {a.score.toFixed(0)}%
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* ── Empty state ── */}
+          {courses.length === 0 && (
+            <View className="mx-4 mt-6 bg-white rounded-2xl p-8 items-center border border-gray-100">
+              <View className="w-16 h-16 rounded-full bg-blue-100 items-center justify-center mb-4">
+                <Ionicons name="book-outline" size={32} color="#2563EB" />
+              </View>
+              <Text className="text-lg font-bold text-gray-900 mb-1">No courses yet</Text>
+              <Text className="text-sm text-gray-500 text-center mb-5">
+                Create your first course to start teaching
+              </Text>
+              <Pressable
+                onPress={() => router.push("/(tabs)/courses/course-form")}
+                className="bg-blue-600 px-6 py-3 rounded-xl"
+              >
+                <Text className="text-white font-semibold">Create Course</Text>
+              </Pressable>
+            </View>
+          )}
+        </>
       )}
     </ScrollView>
   );

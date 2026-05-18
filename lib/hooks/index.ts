@@ -5,3 +5,4 @@ export * from "./useProfile";
 export * from "./useNotifications";
 export * from "./useQuiz";
 export * from "./useLiveClasses";
+export * from "./useAnalytics";
