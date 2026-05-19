@@ -7,12 +7,56 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:278245411954:android:c0d49536dc02d9f7a306eb",
+        "android_client_info": {
+          "package_name": "com.draftien.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "278245411954-rg7tuvi14arcq380isis48qh3m32g204.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd9OMz7oZQDcxk7ev_zyBmDHIcx5-UJF8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "278245411954-rg7tuvi14arcq380isis48qh3m32g204.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "278245411954-0jnevkelfcm0vio574rcvt4g5da7f63b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.draftien.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:278245411954:android:05593693721f9268a306eb",
         "android_client_info": {
           "package_name": "com.draftien.teacher"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "278245411954-r91h0adauphfuklrhuehdbrt2mt4kjhi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.draftien.teacher",
+            "certificate_hash": "19c4e94db8888abe2b13fabecdc6b923a2fe5bc1"
+          }
+        },
         {
           "client_id": "278245411954-rg7tuvi14arcq380isis48qh3m32g204.apps.googleusercontent.com",
           "client_type": 3

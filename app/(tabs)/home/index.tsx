@@ -1,14 +1,11 @@
 import { useAuth } from "@/context/AuthContext";
 import { useTeacherDashboard } from "@/lib/hooks/useAnalytics";
+import { configureNotificationHandler, registerForPushNotificationsAsync } from "@/lib/notifications";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { useEffect } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -16,17 +13,7 @@ import {
   View,
 } from "react-native";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-const NOTIFICATION_PERMISSION_KEY = "notification_permission_requested";
+configureNotificationHandler();
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -121,44 +108,8 @@ export default function HomeScreen() {
   const { data, isLoading, error, refetch, isRefetching } = useTeacherDashboard();
 
   useEffect(() => {
-    requestNotificationPermission();
+    registerForPushNotificationsAsync();
   }, []);
-
-  const requestNotificationPermission = async () => {
-    try {
-      const hasAsked = await SecureStore.getItemAsync(NOTIFICATION_PERMISSION_KEY);
-      if (hasAsked === "true") return;
-      const { status: existing } = await Notifications.getPermissionsAsync();
-      if (existing === "granted") {
-        await SecureStore.setItemAsync(NOTIFICATION_PERMISSION_KEY, "true");
-        await setupPushToken();
-        return;
-      }
-      if (existing === "undetermined") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        await SecureStore.setItemAsync(NOTIFICATION_PERMISSION_KEY, "true");
-        if (status === "granted") await setupPushToken();
-      } else {
-        await SecureStore.setItemAsync(NOTIFICATION_PERMISSION_KEY, "true");
-      }
-    } catch {}
-  };
-
-  const setupPushToken = async () => {
-    try {
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "default",
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: "#2563EB",
-        });
-      }
-      await Notifications.getExpoPushTokenAsync({
-        projectId: "3f94cb48-48e1-42a0-bcb9-b202c4e730a2",
-      });
-    } catch {}
-  };
 
   const summary = data?.summary;
   const courses = data?.courses ?? [];

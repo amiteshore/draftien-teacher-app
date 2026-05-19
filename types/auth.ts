@@ -6,6 +6,7 @@ export type User = {
   role?: "teacher" | "pending" | null;
   isVerified?: boolean;
   isOnboarded?: boolean;
+  notificationToken?: string | null;
 };
 
 export type AuthState = {
