@@ -26,6 +26,29 @@ export default function YouScreen() {
     ]);
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Just logout for now as requested
+              await logout();
+              router.replace("/(auth)/login");
+            } catch {
+              Alert.alert("Error", "Failed to process request. Please try again.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getInitials = () => {
     if (!profile?.name) return "T";
 
@@ -242,6 +265,18 @@ export default function YouScreen() {
             <Ionicons name="log-out-outline" size={18} color="#EF4444" />
 
             <Text className="text-red-500 text-[16px] font-semibold ml-2">Logout</Text>
+          </View>
+        </Pressable>
+
+        {/* DELETE ACCOUNT */}
+        <Pressable
+          onPress={handleDeleteAccount}
+          className="mt-4 mb-8 bg-red-50 border border-red-500 rounded-2xl py-4 items-center justify-center"
+        >
+          <View className="flex-row items-center">
+            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+
+            <Text className="text-red-600 text-[16px] font-semibold ml-2">Delete Account</Text>
           </View>
         </Pressable>
       </View>
