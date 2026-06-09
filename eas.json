@@ -16,9 +16,6 @@
     },
     "production": {
       "autoIncrement": true,
-      "android": {
-        "buildType": "apk"
-      },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://api.draftien.com",
         "EXPO_PUBLIC_WEB_CLIENT_ID": "278245411954-rg7tuvi14arcq380isis48qh3m32g204.apps.googleusercontent.com",
