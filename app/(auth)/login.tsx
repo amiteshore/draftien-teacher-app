@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { signInWithGoogle } from "@/lib/googleLogin";
-import Ionicons from "@expo/vector-icons/Ionicons";
+// import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -65,9 +65,9 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAppleLogin = () => {
-    Alert.alert("Apple Login", "Apple login coming soon.");
-  };
+  // const handleAppleLogin = () => {
+  //   Alert.alert("Apple Login", "Apple login coming soon.");
+  // };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -135,13 +135,13 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          <Pressable
+          {/* <Pressable
             onPress={handleAppleLogin}
             className="mt-4 flex-row items-center justify-center rounded-xl border border-gray-300 py-4"
           >
             <Ionicons name="logo-apple" size={20} color="#1F2937" />
             <Text className="ml-3 text-base font-medium text-gray-800">Continue with Apple</Text>
-          </Pressable>
+          </Pressable> */}
         </View>
 
         {/* Footer */}
