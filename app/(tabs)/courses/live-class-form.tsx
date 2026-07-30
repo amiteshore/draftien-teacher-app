@@ -1,11 +1,14 @@
 import { useCreateLiveClass } from "@/lib/hooks/useLiveClasses";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { format } from "date-fns";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -21,11 +24,39 @@ export default function LiveClassForm() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [scheduledAt, setScheduledAt] = useState(
-    new Date(Date.now() + 3600 * 1000).toISOString().slice(0, 16).replace("T", " "),
+  const [scheduledDate, setScheduledDate] = useState(
+    () => new Date(Date.now() + 3600 * 1000),
   );
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState("60");
   const [platform, setPlatform] = useState<"inhouse" | "zoom" | "google_meet">("inhouse");
+
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+    if (event.type === "set" && selectedDate) {
+      const updated = new Date(scheduledDate);
+      updated.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+      );
+      setScheduledDate(updated);
+    }
+  };
+
+  const handleTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowTimePicker(false);
+    }
+    if (event.type === "set" && selectedDate) {
+      const updated = new Date(scheduledDate);
+      updated.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
+      setScheduledDate(updated);
+    }
+  };
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -38,9 +69,8 @@ export default function LiveClassForm() {
     }
 
     try {
-      const parsedDate = new Date(scheduledAt.trim().replace(" ", "T"));
-      if (Number.isNaN(parsedDate.getTime())) {
-        Alert.alert("Validation Error", "Please enter a valid date/time (YYYY-MM-DD HH:MM)");
+      if (Number.isNaN(scheduledDate.getTime())) {
+        Alert.alert("Validation Error", "Please select a valid date/time.");
         return;
       }
 
@@ -48,7 +78,7 @@ export default function LiveClassForm() {
         courseId,
         title: title.trim(),
         description: description.trim() || undefined,
-        scheduledAt: parsedDate.toISOString(),
+        scheduledAt: scheduledDate.toISOString(),
         durationMinutes: Number.parseInt(durationMinutes, 10) || 60,
         platform,
       });
@@ -104,14 +134,37 @@ export default function LiveClassForm() {
           {/* Scheduled Date & Time */}
           <View className="mb-4">
             <Text className="text-sm font-medium text-gray-700 mb-2">
-              Scheduled Date & Time (YYYY-MM-DD HH:MM) <Text className="text-red-600">*</Text>
+              Scheduled Date & Time <Text className="text-red-600">*</Text>
             </Text>
-            <TextInput
-              value={scheduledAt}
-              onChangeText={setScheduledAt}
-              placeholder="2026-08-01 18:00"
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
-            />
+            <View className="flex-row gap-3">
+              {/* Date Button */}
+              <Pressable
+                onPress={() => setShowDatePicker(true)}
+                className="flex-1 flex-row items-center justify-between border border-gray-300 rounded-xl px-4 py-3 bg-white"
+              >
+                <View className="flex-row items-center gap-2">
+                  <Ionicons name="calendar-outline" size={18} color="#4B5563" />
+                  <Text className="text-base text-gray-900">
+                    {format(scheduledDate, "MMM d, yyyy")}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
+              </Pressable>
+
+              {/* Time Button */}
+              <Pressable
+                onPress={() => setShowTimePicker(true)}
+                className="flex-1 flex-row items-center justify-between border border-gray-300 rounded-xl px-4 py-3 bg-white"
+              >
+                <View className="flex-row items-center gap-2">
+                  <Ionicons name="time-outline" size={18} color="#4B5563" />
+                  <Text className="text-base text-gray-900">
+                    {format(scheduledDate, "h:mm a")}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
+              </Pressable>
+            </View>
           </View>
 
           {/* Duration */}
@@ -168,6 +221,98 @@ export default function LiveClassForm() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Android Date Picker */}
+      {Platform.OS === "android" && showDatePicker && (
+        <DateTimePicker
+          value={scheduledDate}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
+
+      {/* Android Time Picker */}
+      {Platform.OS === "android" && showTimePicker && (
+        <DateTimePicker
+          value={scheduledDate}
+          mode="time"
+          display="default"
+          onChange={handleTimeChange}
+        />
+      )}
+
+      {/* iOS Date Picker Modal */}
+      {Platform.OS === "ios" && (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View className="flex-1 justify-end bg-black/40">
+            <Pressable
+              className="flex-1"
+              onPress={() => setShowDatePicker(false)}
+            />
+            <View className="bg-white rounded-t-3xl pb-8">
+              <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-4">
+                <Text className="text-base font-semibold text-gray-800">Select Date</Text>
+                <Pressable
+                  onPress={() => setShowDatePicker(false)}
+                  className="px-2 py-1"
+                >
+                  <Text className="text-base font-semibold text-red-600">Done</Text>
+                </Pressable>
+              </View>
+              <View className="items-center py-4">
+                <DateTimePicker
+                  value={scheduledDate}
+                  mode="date"
+                  display="inline"
+                  onChange={handleDateChange}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* iOS Time Picker Modal */}
+      {Platform.OS === "ios" && (
+        <Modal
+          visible={showTimePicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowTimePicker(false)}
+        >
+          <View className="flex-1 justify-end bg-black/40">
+            <Pressable
+              className="flex-1"
+              onPress={() => setShowTimePicker(false)}
+            />
+            <View className="bg-white rounded-t-3xl pb-8">
+              <View className="flex-row items-center justify-between border-b border-gray-200 px-4 py-4">
+                <Text className="text-base font-semibold text-gray-800">Select Time</Text>
+                <Pressable
+                  onPress={() => setShowTimePicker(false)}
+                  className="px-2 py-1"
+                >
+                  <Text className="text-base font-semibold text-red-600">Done</Text>
+                </Pressable>
+              </View>
+              <View className="items-center py-4">
+                <DateTimePicker
+                  value={scheduledDate}
+                  mode="time"
+                  display="spinner"
+                  onChange={handleTimeChange}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </>
   );
 }
