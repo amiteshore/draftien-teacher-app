@@ -17,14 +17,8 @@ export default function Layout() {
         name="index"
         options={{
           title: "My Courses",
-          // headerRight: () => (
-          //   <Pressable onPress={() => router.push("/(tabs)/courses/course-form")} hitSlop={8}>
-          //     <Ionicons name="add-outline" size={24} color="#1A1A2E" />
-          //   </Pressable>
-          // ),
         }}
       />
-      <Stack.Screen name="[id]" options={{ headerShown: false }} />
       <Stack.Screen name="course-form" options={{ title: "Create Course" }} />
       <Stack.Screen name="details" options={{ title: "Course Details" }} />
       <Stack.Screen name="edit" options={{ title: "Edit Course" }} />
@@ -53,6 +47,10 @@ export default function Layout() {
       {/* Quiz screens */}
       <Stack.Screen name="quiz-form" options={{ title: "Create Quiz" }} />
       <Stack.Screen name="quiz-details" options={{ title: "Quiz Details" }} />
+
+      {/* Live Class & Announcements screens */}
+      <Stack.Screen name="live-class-form" options={{ title: "Schedule Live Class" }} />
+      <Stack.Screen name="announcement-form" options={{ title: "Post Announcement" }} />
     </Stack>
   );
 }

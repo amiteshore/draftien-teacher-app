@@ -291,7 +291,7 @@ export default function HomeScreen() {
                       <Text className="text-sm text-gray-500">{course.quizCount} quizzes</Text>
                     </View>
                     <Text className="text-sm text-blue-600 font-semibold ml-auto">
-                      {course.avgProgress.toFixed(0)}% avg
+                      {(course.avgProgress ?? 0).toFixed(0)}% avg
                     </Text>
                   </View>
                 </Pressable>

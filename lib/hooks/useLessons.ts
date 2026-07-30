@@ -28,9 +28,25 @@ export const noteKeys = {
   list: (lectureId: string) => [...noteKeys.lists(), lectureId] as const,
 };
 
+export const materialKeys = {
+  all: ["lecture-materials"] as const,
+  lists: () => [...materialKeys.all, "list"] as const,
+  list: (lectureId: string) => [...materialKeys.lists(), lectureId] as const,
+};
+
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────
+
+export type LectureMaterial = {
+  id: string;
+  lectureId: string;
+  title: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number | null;
+  createdAt: string;
+};
 
 export type LectureNote = {
   id: string;
@@ -56,6 +72,7 @@ export type Lecture = {
   createdAt: string;
   updatedAt: string;
   notes: LectureNote[];
+  materials?: LectureMaterial[];
 };
 
 export type Lesson = {
@@ -334,6 +351,61 @@ export function useDeleteLectureNote(lectureId: string, lessonId: string, course
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noteKeys.list(lectureId) });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.list(courseId) });
+    },
+  });
+}
+
+// ─────────────────────────────────────────────
+// Lecture Materials
+// ─────────────────────────────────────────────
+
+export function useLectureMaterials(lectureId: string | undefined) {
+  return useQuery({
+    queryKey: materialKeys.list(lectureId || ""),
+    queryFn: async () => {
+      if (!lectureId) throw new Error("Lecture ID is required");
+      const response = await api.get<{ success: boolean; data: LectureMaterial[] }>(
+        `/lessons/lectures/${lectureId}/materials`,
+      );
+      return response.data.data;
+    },
+    enabled: !!lectureId,
+  });
+}
+
+export function useCreateLectureMaterial(lectureId: string, lessonId: string, courseId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      title: string;
+      fileUrl: string;
+      fileType: string;
+      fileSize?: number;
+    }) => {
+      const response = await api.post<{ success: boolean; data: LectureMaterial }>(
+        `/lessons/lectures/${lectureId}/materials`,
+        data,
+      );
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: materialKeys.list(lectureId) });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.list(courseId) });
+    },
+  });
+}
+
+export function useDeleteLectureMaterial(lectureId: string, lessonId: string, courseId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (materialId: string) => {
+      await api.delete(`/lessons/lectures/materials/${materialId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: materialKeys.list(lectureId) });
       queryClient.invalidateQueries({ queryKey: lessonKeys.list(courseId) });
     },
   });

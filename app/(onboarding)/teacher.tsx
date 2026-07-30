@@ -1,6 +1,7 @@
+import { uploadFileToSignedUrl, usePdfUpload } from "@/lib/hooks/useUpload";
 import { useAuth } from "@/context/AuthContext";
 import Ionicons from "@expo/vector-icons/Ionicons";
-// import * as DocumentPicker from "expo-document-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -16,14 +17,14 @@ import {
 
 export default function TeacherOnboardingScreen() {
   const { completeOnboarding } = useAuth();
+  const pdfUpload = usePdfUpload();
 
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [experience, setExperience] = useState("");
   const [examSpecialization, setExamSpecialization] = useState<"JEE" | "NEET" | null>(null);
   const [subjects, setSubjects] = useState<string[]>([]);
-  // const [resume, setResume] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
-  const [resume, setResume] = useState(null);
+  const [resume, setResume] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [loading, setLoading] = useState(false);
 
   const subjectOptions = {
@@ -37,27 +38,23 @@ export default function TeacherOnboardingScreen() {
     );
   };
 
-  // const pickResume = async () => {
-  //   try {
-  //     const result = await DocumentPicker.getDocumentAsync({
-  //       type: [
-  //         "application/pdf",
-  //         "application/msword",
-  //         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  //       ],
-  //       copyToCacheDirectory: true,
-  //     });
+  const pickResume = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ],
+        copyToCacheDirectory: true,
+      });
 
-  //     if (!result.canceled) {
-  //       setResume(result.assets[0]);
-  //     }
-  //   } catch (error) {
-  //     Alert.alert("Error", "Failed to pick the document.");
-  //   }
-  // };
-
-  const pickResume = () => {
-    setResume(null);
+      if (!result.canceled) {
+        setResume(result.assets[0]);
+      }
+    } catch {
+      Alert.alert("Error", "Failed to pick document.");
+    }
   };
 
   const handleStart = async () => {
@@ -94,17 +91,28 @@ export default function TeacherOnboardingScreen() {
     try {
       setLoading(true);
 
+      let resumeUrl: string | undefined;
+      if (resume) {
+        const { uploadUrl, publicUrl } = await pdfUpload.mutateAsync({
+          fileName: resume.name,
+          contentType: resume.mimeType || "application/pdf",
+        });
+        const fileBlob = await fetch(resume.uri).then((r) => r.blob());
+        await uploadFileToSignedUrl(uploadUrl, fileBlob, resume.mimeType || "application/pdf");
+        resumeUrl = publicUrl;
+      }
+
       await completeOnboarding({
         name,
         mobile,
         examSpecialization,
         subjects,
         experience,
-        resume,
+        resumeUrl,
       });
 
       router.replace("/(tabs)/home");
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -236,9 +244,8 @@ export default function TeacherOnboardingScreen() {
           >
             <View className="flex-row items-center">
               <Ionicons name="document-attach-outline" size={20} color="#6b7280" />
-              <Text className="ml-2 text-sm text-gray-600">
-                {/* {resume ? resume.name : "Upload PDF or DOC"} */}
-                {resume ? "Resume" : "Upload PDF or DOC"}
+              <Text className="ml-2 text-sm text-gray-600" numberOfLines={1}>
+                {resume ? resume.name : "Upload PDF or DOC"}
               </Text>
             </View>
             <Ionicons name="cloud-upload-outline" size={20} color="#6b7280" />

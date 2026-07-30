@@ -54,7 +54,7 @@ export function useQuizzesByCourse(courseId: string) {
   return useQuery<{ success: boolean; data: Quiz[] }>({
     queryKey: ["quizzes", courseId],
     queryFn: async () => {
-      const response = await api.get(`/quiz/${courseId}`);
+      const response = await api.get(`/quiz/course/${courseId}`);
       return response.data;
     },
     enabled: !!courseId,

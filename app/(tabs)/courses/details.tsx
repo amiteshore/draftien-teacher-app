@@ -124,7 +124,7 @@ export default function CourseDetails() {
           ) : null}
         </View>
 
-        {/* ── Content nav buttons ── */}
+        {/* ── Content nav buttons (Row 1: Lessons & Quizzes) ── */}
         <View className="flex-row gap-3 mt-5">
           <Pressable
             onPress={() =>
@@ -156,6 +156,41 @@ export default function CourseDetails() {
             </View>
             <Text className="text-white font-bold text-base">Quizzes</Text>
             <Text className="text-purple-100 text-xs">Manage assessments</Text>
+          </Pressable>
+        </View>
+
+        {/* ── Additional Action buttons (Row 2: Live Class & Announcements) ── */}
+        <View className="flex-row gap-3 mt-3">
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/courses/live-class-form",
+                params: { courseId: id },
+              })
+            }
+            className="flex-1 bg-red-600 rounded-2xl p-4 items-center gap-2"
+          >
+            <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+              <Ionicons name="videocam-outline" size={22} color="#FFFFFF" />
+            </View>
+            <Text className="text-white font-bold text-base">Live Class</Text>
+            <Text className="text-red-100 text-xs">Schedule stream</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/courses/announcement-form",
+                params: { courseId: id },
+              })
+            }
+            className="flex-1 bg-amber-600 rounded-2xl p-4 items-center gap-2"
+          >
+            <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+              <Ionicons name="megaphone-outline" size={22} color="#FFFFFF" />
+            </View>
+            <Text className="text-white font-bold text-base">Announce</Text>
+            <Text className="text-amber-100 text-xs">Notify students</Text>
           </Pressable>
         </View>
 

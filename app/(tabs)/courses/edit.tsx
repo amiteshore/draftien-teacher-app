@@ -1,4 +1,4 @@
-import { useCourse, useUpdateCourse } from "@/lib/hooks";
+import { useCategories, useCourse, useUpdateCourse } from "@/lib/hooks";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -29,6 +29,7 @@ export default function EditCourse() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: course, isLoading } = useCourse(id);
+  const { data: categories = [] } = useCategories();
   const updateCourse = useUpdateCourse(id || "");
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
@@ -81,21 +82,6 @@ export default function EditCourse() {
 
       if (formData.description.trim()) {
         payload.description = formData.description.trim();
-      }
-
-      if (formData.thumbnailUrl.trim()) {
-        payload.thumbnailUrl = formData.thumbnailUrl.trim();
-      }
-
-      if (formData.category.trim()) {
-        payload.category = formData.category.trim();
-      }
-
-      if (formData.price.trim()) {
-        const priceNum = Number.parseFloat(formData.price);
-        if (Number.isFinite(priceNum) && priceNum >= 0) {
-          payload.price = priceNum;
-        }
       }
 
       if (formData.thumbnailUrl.trim()) {
@@ -201,19 +187,22 @@ export default function EditCourse() {
         {/* Category */}
         <View className="mb-4">
           <Text className="text-sm font-medium text-gray-700 mb-2">Category</Text>
-          <View className="flex-row gap-2">
-            {(["JEE", "NEET"] as const).map((cat) => (
+          <View className="flex-row flex-wrap gap-2">
+            {(categories.length > 0
+              ? categories.map((c) => c.name)
+              : ["JEE", "NEET", "Foundation"]
+            ).map((cat) => (
               <Pressable
                 key={cat}
                 onPress={() => setFormData({ ...formData, category: cat })}
-                className={`flex-1 py-3 rounded-xl border ${
+                className={`py-2.5 px-4 rounded-xl border ${
                   formData.category === cat
                     ? "bg-blue-600 border-blue-600"
                     : "bg-white border-gray-300"
                 }`}
               >
                 <Text
-                  className={`text-center font-semibold ${
+                  className={`text-center font-semibold text-xs ${
                     formData.category === cat ? "text-white" : "text-gray-700"
                   }`}
                 >

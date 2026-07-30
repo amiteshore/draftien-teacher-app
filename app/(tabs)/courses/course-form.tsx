@@ -1,4 +1,4 @@
-import { useCreateCourse } from "@/lib/hooks";
+import { useCategories, useCreateCourse } from "@/lib/hooks";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -26,6 +26,7 @@ type CourseFormData = {
 export default function CourseForm() {
   const router = useRouter();
   const createCourse = useCreateCourse();
+  const { data: categories = [] } = useCategories();
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
     description: "",
@@ -145,19 +146,22 @@ export default function CourseForm() {
         {/* Category */}
         <View className="mb-4">
           <Text className="text-sm font-medium text-gray-700 mb-2">Category</Text>
-          <View className="flex-row gap-2">
-            {(["JEE", "NEET"] as const).map((cat) => (
+          <View className="flex-row flex-wrap gap-2">
+            {(categories.length > 0
+              ? categories.map((c) => c.name)
+              : ["JEE", "NEET", "Foundation"]
+            ).map((cat) => (
               <Pressable
                 key={cat}
                 onPress={() => setFormData({ ...formData, category: cat })}
-                className={`flex-1 py-3 rounded-xl border ${
+                className={`py-2.5 px-4 rounded-xl border ${
                   formData.category === cat
                     ? "bg-blue-600 border-blue-600"
                     : "bg-white border-gray-300"
                 }`}
               >
                 <Text
-                  className={`text-center font-semibold ${
+                  className={`text-center font-semibold text-xs ${
                     formData.category === cat ? "text-white" : "text-gray-700"
                   }`}
                 >

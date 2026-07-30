@@ -35,7 +35,7 @@ export default function Courses() {
           Create your first course to start teaching
         </Text>
         <Pressable
-          onPress={() => router.push("/courses/course-form")}
+          onPress={() => router.push("/(tabs)/courses/course-form")}
           className="bg-blue-600 px-6 py-3 rounded-xl mt-6"
         >
           <Text className="text-white font-semibold">Create New Course</Text>

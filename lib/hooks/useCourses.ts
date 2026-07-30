@@ -11,6 +11,62 @@ export const courseKeys = {
   detail: (id: string) => [...courseKeys.details(), id] as const,
 };
 
+export type CourseCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+};
+
+export type EnrolledStudent = {
+  id: string;
+  name: string | null;
+  email: string;
+  enrolledAt: string;
+  progressPercentage: number;
+  lastAccessedAt: string | null;
+};
+
+export type CourseStudentsResponse = {
+  success: boolean;
+  data: {
+    students: EnrolledStudent[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+};
+
+// Get students enrolled in a specific course
+export function useCourseStudents(courseId: string | undefined, page = 1, limit = 50) {
+  return useQuery<CourseStudentsResponse>({
+    queryKey: ["course-students", courseId, page, limit],
+    queryFn: async () => {
+      if (!courseId) throw new Error("Course ID is required");
+      const response = await api.get<CourseStudentsResponse>(
+        `/courses/${courseId}/students?page=${page}&limit=${limit}`,
+      );
+      return response.data;
+    },
+    enabled: !!courseId,
+  });
+}
+
+// Get all course categories
+export function useCategories() {
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const response = await api.get<{ success: boolean; data: CourseCategory[] }>("/courses/categories");
+      return response.data.data || [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
 // Get all courses for the current teacher
 export function useCourses() {
   return useQuery({

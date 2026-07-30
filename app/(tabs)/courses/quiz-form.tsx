@@ -26,6 +26,7 @@ export default function QuizFormScreen() {
   const [maxAttempts, setMaxAttempts] = useState("3");
   const [questions, setQuestions] = useState<QuizQuestion[]>([
     {
+      id: Math.random().toString(),
       questionText: "",
       questionType: "mcq",
       options: ["", ""],
@@ -39,6 +40,7 @@ export default function QuizFormScreen() {
     setQuestions([
       ...questions,
       {
+        id: Math.random().toString(),
         questionText: "",
         questionType: "mcq",
         options: ["", ""],
@@ -231,7 +233,7 @@ export default function QuizFormScreen() {
             </View>
 
             {questions.map((question, qIndex) => (
-              <View key={qIndex} className="bg-gray-50 rounded-2xl p-4 mb-3">
+              <View key={question.id || qIndex} className="bg-gray-50 rounded-2xl p-4 mb-3">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-base font-semibold text-gray-900">
                     Question {qIndex + 1}
