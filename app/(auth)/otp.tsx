@@ -90,7 +90,7 @@ export default function OtpScreen() {
             onPress={handleVerifyOtp}
             disabled={loading}
             className={`mt-6 items-center rounded-xl py-4 ${
-              loading ? "bg-indigo-400" : "bg-indigo-600"
+              loading ? "bg-[#02a7fc]/70" : "bg-[#02a7fc]"
             }`}
           >
             <Text className="text-base font-semibold text-white">
@@ -100,7 +100,7 @@ export default function OtpScreen() {
 
           {/* Resend OTP */}
           <Pressable onPress={handleResendOtp} disabled={resending} className="mt-4 items-center">
-            <Text className="text-sm font-medium text-indigo-600">
+            <Text className="text-sm font-medium text-[#02a7fc]">
               {resending ? "Resending..." : "Resend OTP"}
             </Text>
           </Pressable>

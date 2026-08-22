@@ -207,7 +207,7 @@ export default function TeacherOnboardingScreen() {
         <Pressable
           onPress={handleStart}
           disabled={loading}
-          className={`items-center rounded-xl py-4 ${loading ? "bg-indigo-400" : "bg-indigo-600"}`}
+          className={`items-center rounded-xl py-4 ${loading ? "bg-[#02a7fc]/70" : "bg-[#02a7fc]"}`}
         >
           <Text className="text-base font-semibold text-white">
             {loading ? "Please wait..." : "Let's Start"}
