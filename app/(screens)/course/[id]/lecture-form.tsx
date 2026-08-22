@@ -19,7 +19,7 @@ import {
 
 export default function LectureForm() {
   const router = useRouter();
-  const { lessonId, courseId } = useLocalSearchParams<{ lessonId: string; courseId: string }>();
+  const { lessonId, id: courseId } = useLocalSearchParams<{ lessonId: string; id: string }>();
   const createLecture = useCreateLecture(courseId || "");
   const videoUpload = useVideoUpload();
   const pdfUpload = usePdfUpload();

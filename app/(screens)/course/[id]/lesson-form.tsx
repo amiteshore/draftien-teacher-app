@@ -16,7 +16,7 @@ import {
 
 export default function LessonForm() {
   const router = useRouter();
-  const { courseId } = useLocalSearchParams<{ courseId: string }>();
+  const { id: courseId } = useLocalSearchParams<{ id: string }>();
   const createLesson = useCreateLesson();
 
   const [title, setTitle] = useState("");

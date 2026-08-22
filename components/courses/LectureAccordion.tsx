@@ -110,8 +110,9 @@ export function LectureAccordion({ lecture, lessonId, courseId, router }: Props)
       return;
     }
     router.push({
-      pathname: "/(tabs)/courses/lecture-viewer",
+      pathname: "/(screens)/course/[id]/lecture-viewer",
       params: {
+        id: courseId,
         url: lecture.contentUrl,
         type: lecture.type,
         title: lecture.title,
@@ -286,8 +287,8 @@ export function LectureAccordion({ lecture, lessonId, courseId, router }: Props)
                 hitSlop={8}
                 onPress={() =>
                   router.push({
-                    pathname: "/(tabs)/courses/note-form",
-                    params: { lectureId: lecture.id, lessonId, courseId },
+                    pathname: "/(screens)/course/[id]/note-form",
+                    params: { lectureId: lecture.id, lessonId, id: courseId },
                   })
                 }
               >
@@ -309,8 +310,8 @@ export function LectureAccordion({ lecture, lessonId, courseId, router }: Props)
               <Pressable
                 onPress={() =>
                   router.push({
-                    pathname: "/(tabs)/courses/note-form",
-                    params: { lectureId: lecture.id, lessonId, courseId },
+                    pathname: "/(screens)/course/[id]/note-form",
+                    params: { lectureId: lecture.id, lessonId, id: courseId },
                   })
                 }
                 className="bg-gray-50 rounded-lg p-2.5 items-center"

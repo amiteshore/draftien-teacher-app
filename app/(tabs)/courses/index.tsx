@@ -48,7 +48,7 @@ export default function Courses() {
         renderItem={({ item }) => (
           <Pressable
             onPress={() =>
-              router.push({ pathname: "/(tabs)/courses/details", params: { id: item.id } })
+              router.push({ pathname: "/(screens)/course/[id]/details", params: { id: item.id } })
             }
             className="bg-gray-50 rounded-2xl p-4 mb-4"
           >

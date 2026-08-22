@@ -171,8 +171,8 @@ export function LessonAccordion({ lesson, courseId, router, defaultExpanded = fa
               hitSlop={8}
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/courses/lecture-form",
-                  params: { lessonId: lesson.id, courseId },
+                  pathname: "/(screens)/course/[id]/lecture-form",
+                  params: { lessonId: lesson.id, id: courseId },
                 })
               }
             >
@@ -194,8 +194,8 @@ export function LessonAccordion({ lesson, courseId, router, defaultExpanded = fa
             <Pressable
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/courses/lecture-form",
-                  params: { lessonId: lesson.id, courseId },
+                  pathname: "/(screens)/course/[id]/lecture-form",
+                  params: { lessonId: lesson.id, id: courseId },
                 })
               }
               className="bg-white border border-dashed border-gray-300 rounded-xl p-4 items-center"

@@ -16,7 +16,7 @@ import {
 
 export default function AnnouncementForm() {
   const router = useRouter();
-  const { courseId } = useLocalSearchParams<{ courseId: string }>();
+  const { id: courseId } = useLocalSearchParams<{ id: string }>();
   const createAnnouncement = useCreateAnnouncement();
 
   const [title, setTitle] = useState("");

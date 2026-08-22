@@ -45,7 +45,7 @@ export function LessonsTab({ courseId, router }: Props) {
         </Text>
         <Pressable
           onPress={() =>
-            router.push({ pathname: "/(tabs)/courses/lesson-form", params: { courseId } })
+            router.push({ pathname: "/(screens)/course/[id]/lesson-form", params: { id: courseId } })
           }
           className="flex-row items-center gap-1 bg-blue-600 px-3 py-2 rounded-xl"
         >
@@ -73,7 +73,7 @@ export function LessonsTab({ courseId, router }: Props) {
           </Text>
           <Pressable
             onPress={() =>
-              router.push({ pathname: "/(tabs)/courses/lesson-form", params: { courseId } })
+              router.push({ pathname: "/(screens)/course/[id]/lesson-form", params: { id: courseId } })
             }
             className="bg-blue-600 px-6 py-3 rounded-xl mt-6"
           >

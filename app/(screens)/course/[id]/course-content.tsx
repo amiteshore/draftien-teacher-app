@@ -9,7 +9,7 @@ type Tab = "lessons" | "announcements" | "students";
 
 export default function CourseContent() {
   const router = useRouter();
-  const { courseId, initialTab } = useLocalSearchParams<{ courseId: string; initialTab?: string }>();
+  const { id: courseId, initialTab } = useLocalSearchParams<{ id: string; initialTab?: string }>();
   const [activeTab, setActiveTab] = useState<Tab>(
     (initialTab as Tab) || "lessons",
   );

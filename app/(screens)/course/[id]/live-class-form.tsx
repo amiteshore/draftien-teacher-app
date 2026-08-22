@@ -19,7 +19,7 @@ import {
 
 export default function LiveClassForm() {
   const router = useRouter();
-  const { courseId } = useLocalSearchParams<{ courseId: string }>();
+  const { id: courseId } = useLocalSearchParams<{ id: string }>();
   const createLiveClass = useCreateLiveClass();
 
   const [title, setTitle] = useState("");

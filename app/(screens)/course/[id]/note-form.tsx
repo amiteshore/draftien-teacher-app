@@ -20,10 +20,10 @@ type NoteMode = "pdf" | "text";
 
 export default function NoteForm() {
   const router = useRouter();
-  const { lectureId, lessonId, courseId } = useLocalSearchParams<{
+  const { lectureId, lessonId, id: courseId } = useLocalSearchParams<{
     lectureId: string;
     lessonId: string;
-    courseId: string;
+    id: string;
   }>();
   const createNote = useCreateLectureNote(lectureId || "", lessonId || "", courseId || "");
   const pdfUpload = usePdfUpload();

@@ -206,8 +206,8 @@ export default function CourseDetails() {
           <Pressable
             onPress={() =>
               router.push({
-                pathname: "/(tabs)/courses/course-content",
-                params: { courseId: id, initialTab: "lessons" },
+                pathname: "/(screens)/course/[id]/course-content",
+                params: { id, initialTab: "lessons" },
               })
             }
             className="flex-1 bg-blue-600 rounded-2xl p-4 items-center gap-2"
@@ -225,8 +225,8 @@ export default function CourseDetails() {
           <Pressable
             onPress={() =>
               router.push({
-                pathname: "/(tabs)/courses/live-class-form",
-                params: { courseId: id },
+                pathname: "/(screens)/course/[id]/live-class-form",
+                params: { id },
               })
             }
             className="flex-1 bg-red-600 rounded-2xl p-4 items-center gap-2"
@@ -241,8 +241,8 @@ export default function CourseDetails() {
           <Pressable
             onPress={() =>
               router.push({
-                pathname: "/(tabs)/courses/announcement-form",
-                params: { courseId: id },
+                pathname: "/(screens)/course/[id]/announcement-form",
+                params: { id },
               })
             }
             className="flex-1 bg-amber-600 rounded-2xl p-4 items-center gap-2"
@@ -273,7 +273,7 @@ export default function CourseDetails() {
 
         {/* Edit button */}
         <Pressable
-          onPress={() => router.push({ pathname: "/(tabs)/courses/edit", params: { id } })}
+          onPress={() => router.push({ pathname: "/(screens)/course/[id]/edit", params: { id } })}
           className="mt-4 bg-gray-900 py-4 rounded-2xl items-center flex-row justify-center gap-2"
         >
           <Ionicons name="create-outline" size={18} color="#FFFFFF" />

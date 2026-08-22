@@ -229,7 +229,7 @@ export default function HomeScreen() {
                 <Pressable
                   key={course.id}
                   onPress={() =>
-                    router.push({ pathname: "/(tabs)/courses/details", params: { id: course.id } })
+                    router.push({ pathname: "/(screens)/course/[id]/details", params: { id: course.id } })
                   }
                   className="bg-white rounded-2xl p-4 mb-3 border border-gray-100"
                 >

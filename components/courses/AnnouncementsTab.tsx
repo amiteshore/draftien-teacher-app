@@ -157,7 +157,7 @@ export function AnnouncementsTab({ courseId, router }: Props) {
         </Text>
         <Pressable
           onPress={() =>
-            router.push({ pathname: "/(tabs)/courses/announcement-form", params: { courseId } })
+            router.push({ pathname: "/(screens)/course/[id]/announcement-form", params: { id: courseId } })
           }
           className="flex-row items-center gap-1 bg-amber-600 px-3 py-2 rounded-xl"
         >
@@ -179,7 +179,7 @@ export function AnnouncementsTab({ courseId, router }: Props) {
           </Text>
           <Pressable
             onPress={() =>
-              router.push({ pathname: "/(tabs)/courses/announcement-form", params: { courseId } })
+              router.push({ pathname: "/(screens)/course/[id]/announcement-form", params: { id: courseId } })
             }
             className="bg-amber-600 px-6 py-3 rounded-xl mt-6"
           >
