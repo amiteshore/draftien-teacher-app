@@ -11,6 +11,7 @@ import {
 } from "@/lib/storage";
 import { User } from "@/types/auth";
 import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type AuthContextType = {
@@ -56,6 +57,7 @@ type GoogleLoginResponseData = {
 };
 
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -247,6 +249,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const logout = async () => {
     await signOutFromGoogle();
     await clearAuthData();
+    queryClient.clear();
     setUser(null);
     setPendingEmail(null);
   };
