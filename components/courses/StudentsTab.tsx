@@ -63,7 +63,7 @@ type Props = {
 export function StudentsTab({ courseId }: Props) {
   const [search, setSearch] = useState("");
   const { data: studentsData, isLoading, error, refetch } = useCourseStudents(courseId);
-  const students = studentsData?.data?.students || [];
+  const students = studentsData?.data || [];
 
   const filteredStudents = students.filter(
     (s) =>

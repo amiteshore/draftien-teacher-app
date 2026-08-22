@@ -29,14 +29,12 @@ export type EnrolledStudent = {
 
 export type CourseStudentsResponse = {
   success: boolean;
-  data: {
-    students: EnrolledStudent[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
+  data: EnrolledStudent[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
   };
 };
 
