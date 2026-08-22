@@ -57,11 +57,11 @@ export default function CourseDetails() {
       {course.thumbnailUrl ? (
         <Image
           source={{ uri: course.thumbnailUrl }}
-          style={{ width: "100%", aspectRatio: 16 / 9 }}
+          className="w-full aspect-video"
           resizeMode="cover"
         />
       ) : (
-        <View className="w-full h-48 bg-gray-100 items-center justify-center">
+        <View className="w-full aspect-video bg-gray-100 items-center justify-center">
           <Ionicons name="image-outline" size={56} color="#D1D5DB" />
         </View>
       )}
@@ -70,34 +70,12 @@ export default function CourseDetails() {
         {/* Title */}
         <Text className="text-2xl font-bold text-gray-900">{course.title}</Text>
 
-        {/* Badges */}
-        <View className="flex-row flex-wrap gap-2 mt-3">
-          <View
-            className={`px-3 py-1 rounded-full ${course.isPublished ? "bg-green-100" : "bg-yellow-100"}`}
-          >
-            <Text
-              className={`text-xs font-semibold ${course.isPublished ? "text-green-700" : "text-yellow-700"}`}
-            >
-              {course.isPublished ? "Published" : "Draft"}
-            </Text>
-          </View>
-          {course.category ? (
-            <View className="px-3 py-1 rounded-full bg-blue-100">
-              <Text className="text-xs font-semibold text-blue-700">{course.category}</Text>
-            </View>
-          ) : null}
-          {course.level ? (
-            <View className="px-3 py-1 rounded-full bg-purple-100">
-              <Text className="text-xs font-semibold text-purple-700 capitalize">
-                {course.level}
-              </Text>
-            </View>
-          ) : null}
-        </View>
+
 
         {/* Description */}
         {course.description ? (
-          <View className="mt-4">
+          <View className="mt-6">
+            <Text className="text-lg font-bold text-gray-900 mb-2">About this course</Text>
             <Text
               className="text-base text-gray-600 leading-relaxed"
               numberOfLines={isDescriptionExpanded ? undefined : 2}
@@ -114,7 +92,41 @@ export default function CourseDetails() {
 
         {/* Course meta */}
         <View className="mt-5 bg-gray-50 rounded-2xl p-4 gap-3">
-          {course.price !== undefined ? (
+          <View className="flex-row justify-between items-center">
+            <Text className="text-sm text-gray-500">Status</Text>
+            <View
+              className={`px-3 py-1 rounded-full ${course.isPublished ? "bg-green-100" : "bg-yellow-100"}`}
+            >
+              <Text
+                className={`text-xs font-semibold ${course.isPublished ? "text-green-700" : "text-yellow-700"}`}
+              >
+                {course.isPublished ? "Published" : "Draft"}
+              </Text>
+            </View>
+          </View>
+          {course.category ? (
+            <View className="flex-row justify-between items-center">
+              <Text className="text-sm text-gray-500">Category</Text>
+              <Text className="text-sm font-semibold text-gray-900">{course.category}</Text>
+            </View>
+          ) : null}
+          {course.level ? (
+            <View className="flex-row justify-between items-center">
+              <Text className="text-sm text-gray-500">Level</Text>
+              <Text className="text-sm font-semibold text-gray-900 capitalize">{course.level}</Text>
+            </View>
+          ) : null}
+          <View className="flex-row justify-between items-center">
+            <Text className="text-sm text-gray-500">Course Type</Text>
+            <View className="items-end">
+              {course.price === 0 || !course.price ? (
+                <Text className="text-sm font-semibold text-green-600">Free</Text>
+              ) : (
+                <Text className="text-sm font-semibold text-blue-600">Paid</Text>
+              )}
+            </View>
+          </View>
+          {course.price !== undefined && course.price > 0 ? (
             <View className="flex-row justify-between items-center">
               <Text className="text-sm text-gray-500">Price</Text>
               <View className="items-end">
@@ -128,21 +140,58 @@ export default function CourseDetails() {
                   </View>
                 ) : (
                   <Text className="text-sm font-semibold text-gray-900">
-                    {course.price === 0 ? "Free" : `₹${course.price}`}
+                    ₹{course.price}
                   </Text>
                 )}
               </View>
             </View>
           ) : null}
-          {course.durationHours ? (
+          {course.durationHours || course.durationValue ? (
             <View className="flex-row justify-between">
               <Text className="text-sm text-gray-500">Duration</Text>
               <Text className="text-sm font-semibold text-gray-900">
-                {course.durationHours} hours
+                {course.durationValue && course.durationType 
+                  ? `${course.durationValue} ${course.durationType}` 
+                  : `${course.durationHours} hours`}
               </Text>
             </View>
           ) : null}
-          {course.teacherName ? (
+          {course.availabilityType ? (
+            <View className="flex-row justify-between">
+              <Text className="text-sm text-gray-500">Availability</Text>
+              <Text className="text-sm font-semibold text-gray-900 capitalize">
+                {course.availabilityType}
+              </Text>
+            </View>
+          ) : null}
+          {course.startDate ? (
+            <View className="flex-row justify-between">
+              <Text className="text-sm text-gray-500">Start Date</Text>
+              <Text className="text-sm font-semibold text-gray-900">
+                {new Date(course.startDate).toLocaleDateString()}
+              </Text>
+            </View>
+          ) : null}
+          {course.endDate ? (
+            <View className="flex-row justify-between">
+              <Text className="text-sm text-gray-500">End Date</Text>
+              <Text className="text-sm font-semibold text-gray-900">
+                {new Date(course.endDate).toLocaleDateString()}
+              </Text>
+            </View>
+          ) : null}
+          {course.teachers && course.teachers.length > 0 ? (
+            <View className="flex-col gap-2 mt-1">
+              <Text className="text-sm text-gray-500">Instructors</Text>
+              <View className="gap-2 pl-3 border-l-2 border-gray-200">
+                {course.teachers.map((t, idx) => (
+                  <View key={t.id || idx} className="flex-row justify-between items-center">
+                    <Text className="text-sm font-semibold text-gray-900">{t.name || t.email || "Unknown"}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : course.teacherName ? (
             <View className="flex-row justify-between">
               <Text className="text-sm text-gray-500">Instructor</Text>
               <Text className="text-sm font-semibold text-gray-900">{course.teacherName}</Text>
