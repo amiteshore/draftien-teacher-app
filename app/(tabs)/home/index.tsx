@@ -19,12 +19,7 @@ configureNotificationHandler();
 // Helpers
 // ─────────────────────────────────────────────
 
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good Morning";
-  if (h < 18) return "Good Afternoon";
-  return "Good Evening";
-}
+
 
 function getInitials(name?: string | null) {
   if (!name) return "T";
@@ -128,20 +123,7 @@ export default function HomeScreen() {
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />
       }
     >
-      {/* ── Header ── */}
-      <View className="bg-white px-5 pt-5 pb-5">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-1">
-            <Text className="text-sm text-gray-500">{getGreeting()}</Text>
-            <Text className="text-2xl font-bold text-gray-900 mt-0.5">
-              {user?.name || "Teacher"}
-            </Text>
-          </View>
-          <View className="w-12 h-12 rounded-full bg-blue-600 items-center justify-center">
-            <Text className="text-white text-base font-bold">{getInitials(user?.name)}</Text>
-          </View>
-        </View>
-      </View>
+
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center py-24">
