@@ -1,6 +1,7 @@
 import { useCourse, useUpdateCourse } from "@/lib/hooks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +18,7 @@ export default function CourseDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: course, isLoading, error, refetch } = useCourse(id);
   const updateCourse = useUpdateCourse(id || "");
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const handleTogglePublish = async (value: boolean) => {
     try {
@@ -95,17 +97,41 @@ export default function CourseDetails() {
 
         {/* Description */}
         {course.description ? (
-          <Text className="text-sm text-gray-600 mt-4 leading-5">{course.description}</Text>
+          <View className="mt-4">
+            <Text
+              className="text-base text-gray-600 leading-relaxed"
+              numberOfLines={isDescriptionExpanded ? undefined : 2}
+            >
+              {course.description}
+            </Text>
+            <Pressable onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)} className="mt-1">
+              <Text className="text-blue-600 font-medium text-sm">
+                {isDescriptionExpanded ? "Read less" : "Read more"}
+              </Text>
+            </Pressable>
+          </View>
         ) : null}
 
         {/* Course meta */}
         <View className="mt-5 bg-gray-50 rounded-2xl p-4 gap-3">
           {course.price !== undefined ? (
-            <View className="flex-row justify-between">
+            <View className="flex-row justify-between items-center">
               <Text className="text-sm text-gray-500">Price</Text>
-              <Text className="text-sm font-semibold text-gray-900">
-                {course.price === 0 ? "Free" : `₹${course.price}`}
-              </Text>
+              <View className="items-end">
+                {course.effectivePrice !== undefined && course.effectivePrice !== course.price ? (
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-xs text-gray-400 line-through">₹{course.price}</Text>
+                    <Text className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full overflow-hidden">
+                      {course.discountType === "percentage" ? `${course.discountValue}% OFF` : `₹${course.discountValue} OFF`}
+                    </Text>
+                    <Text className="text-sm font-semibold text-gray-900">₹{course.effectivePrice}</Text>
+                  </View>
+                ) : (
+                  <Text className="text-sm font-semibold text-gray-900">
+                    {course.price === 0 ? "Free" : `₹${course.price}`}
+                  </Text>
+                )}
+              </View>
             </View>
           ) : null}
           {course.durationHours ? (

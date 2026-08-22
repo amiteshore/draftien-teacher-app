@@ -7,6 +7,9 @@ export type Course = {
   teacherId: string;
   teacherName: string;
   price: number;
+  discountType?: "fixed" | "percentage" | null;
+  discountValue?: number | null;
+  effectivePrice?: number;
   durationHours: number | null;
   level: string;
   isPublished: boolean;
