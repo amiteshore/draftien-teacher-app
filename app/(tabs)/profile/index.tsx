@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/axios";
 import { useProfile } from "@/lib/hooks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
@@ -37,11 +38,11 @@ export default function YouScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              // Just logout for now as requested
+              await api.delete("/teachers/profile/me");
               await logout();
               router.replace("/(auth)/login");
-            } catch {
-              Alert.alert("Error", "Failed to process request. Please try again.");
+            } catch (error: any) {
+              Alert.alert("Error", error.response?.data?.message || "Failed to process request. Please try again.");
             }
           },
         },
