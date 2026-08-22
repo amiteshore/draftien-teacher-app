@@ -1,7 +1,5 @@
 import { useCreateAnnouncement } from "@/lib/hooks/useAnnouncements";
-import { uploadFileToSignedUrl, usePdfUpload, useImageUpload } from "@/lib/hooks/useUpload";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as DocumentPicker from "expo-document-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -20,40 +18,9 @@ export default function AnnouncementForm() {
   const router = useRouter();
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
   const createAnnouncement = useCreateAnnouncement();
-  const pdfUpload = usePdfUpload();
-  const imageUpload = useImageUpload();
 
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [attachment, setAttachment] = useState<{ name: string; url: string } | null>(null);
-
-  const handlePickAttachment = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/pdf", "image/*"],
-        copyToCacheDirectory: true,
-      });
-      if (result.canceled) return;
-      const file = result.assets[0];
-      setUploading(true);
-
-      const isImage = file.mimeType?.startsWith("image/");
-      const uploader = isImage ? imageUpload : pdfUpload;
-
-      const { uploadUrl, publicUrl } = await uploader.mutateAsync({
-        fileName: file.name,
-        contentType: file.mimeType || (isImage ? "image/jpeg" : "application/pdf"),
-      });
-      const fileBlob = await fetch(file.uri).then((r) => r.blob());
-      await uploadFileToSignedUrl(uploadUrl, fileBlob, file.mimeType || (isImage ? "image/jpeg" : "application/pdf"));
-      setAttachment({ name: file.name, url: publicUrl });
-    } catch {
-      Alert.alert("Error", "Failed to upload attachment");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -75,8 +42,6 @@ export default function AnnouncementForm() {
         title: title.trim(),
         message: message.trim(),
         targetingType: "course",
-        fileUrl: attachment?.url,
-        fileName: attachment?.name,
       });
 
       Alert.alert("Success", "Announcement posted!", [
@@ -114,14 +79,14 @@ export default function AnnouncementForm() {
           </View>
 
           {/* Message */}
-          <View className="mb-4">
+          <View className="mb-6">
             <Text className="text-sm font-medium text-gray-700 mb-2">
-              Message <Text className="text-red-600">*</Text>
+              Content <Text className="text-red-600">*</Text>
             </Text>
             <TextInput
               value={message}
               onChangeText={setMessage}
-              placeholder="Write your announcement message here for enrolled students..."
+              placeholder="Write your announcement content here for enrolled students..."
               multiline
               numberOfLines={6}
               textAlignVertical="top"
@@ -130,45 +95,12 @@ export default function AnnouncementForm() {
             />
           </View>
 
-          {/* Attachment */}
-          <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-2">Optional Attachment</Text>
-            {attachment ? (
-              <View className="bg-purple-50 border border-purple-200 rounded-xl p-4 flex-row items-center justify-between">
-                <View className="flex-1 flex-row items-center">
-                  <Ionicons name="document-attach" size={22} color="#7C3AED" />
-                  <Text className="ml-2 text-sm font-semibold text-gray-900 flex-1" numberOfLines={1}>
-                    {attachment.name}
-                  </Text>
-                </View>
-                <Pressable onPress={() => setAttachment(null)}>
-                  <Ionicons name="close-circle" size={22} color="#EF4444" />
-                </Pressable>
-              </View>
-            ) : (
-              <Pressable
-                onPress={handlePickAttachment}
-                disabled={uploading}
-                className="border-2 border-dashed border-gray-300 rounded-xl p-5 items-center justify-center flex-row gap-2"
-              >
-                {uploading ? (
-                  <ActivityIndicator color="#7C3AED" />
-                ) : (
-                  <>
-                    <Ionicons name="cloud-upload-outline" size={22} color="#6B7280" />
-                    <Text className="text-sm font-medium text-gray-700">Attach Document or Image</Text>
-                  </>
-                )}
-              </Pressable>
-            )}
-          </View>
-
           {/* Submit Button */}
           <Pressable
             onPress={handleCreate}
-            disabled={createAnnouncement.isPending || uploading}
+            disabled={createAnnouncement.isPending}
             className={`py-4 rounded-xl items-center flex-row justify-center gap-2 ${
-              createAnnouncement.isPending || uploading ? "bg-purple-400" : "bg-purple-600"
+              createAnnouncement.isPending ? "bg-purple-400" : "bg-purple-600"
             }`}
           >
             {createAnnouncement.isPending ? (

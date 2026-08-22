@@ -14,6 +14,7 @@ import {
   ScrollView,
   Text,
   View,
+  Image,
 } from "react-native";
 
 type CardProps = {
@@ -61,38 +62,52 @@ function AnnouncementCard({ announcement, courseId }: CardProps) {
               {announcement.title}
             </Text>
             <Text className="text-xs text-gray-400 mt-0.5">
-              {format(new Date(announcement.createdAt), "MMM d, yyyy 'at' h:mm a")}
+              {format(new Date(announcement.createdAt), "MMM d, yyyy")}
             </Text>
           </View>
         </View>
         <Pressable onPress={handleDelete} disabled={deleteAnnouncement.isPending} hitSlop={8}>
           {deleteAnnouncement.isPending ? (
-            <ActivityIndicator size="small" color="#EF4444" />
+            <ActivityIndicator size="small" color="#000000" />
           ) : (
-            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+            <Ionicons name="trash-outline" size={18} color="#000000" />
           )}
         </Pressable>
       </View>
 
-      <Text className="text-sm text-gray-700 leading-5 my-2">{announcement.message}</Text>
+    {!!announcement.content && (
+      <Text className="text-sm text-gray-700 leading-5 my-2">{announcement.content}</Text>
+    )}
 
-      {/* Attachments */}
+    {/* Attachments */}
       {announcement.attachments && announcement.attachments.length > 0 && (
         <View className="mt-3 pt-3 border-t border-gray-200">
           <Text className="text-xs font-semibold text-gray-500 mb-2">Attachments</Text>
-          {announcement.attachments.map((att) => (
-            <Pressable
-              key={att.id}
-              onPress={() => handleOpenAttachment(att.fileUrl)}
-              className="flex-row items-center bg-white border border-gray-200 rounded-xl p-2.5 mb-1.5"
-            >
-              <Ionicons name="document-attach" size={16} color="#7C3AED" />
-              <Text className="flex-1 text-xs font-medium text-purple-700 ml-2" numberOfLines={1}>
-                {att.title}
-              </Text>
-              <Ionicons name="open-outline" size={16} color="#7C3AED" />
-            </Pressable>
-          ))}
+          {announcement.attachments.map((att) => {
+            const isImage = att.attachmentType === "image" || att.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+            
+            if (isImage) {
+              return (
+                <Pressable key={att.id} onPress={() => handleOpenAttachment(att.fileUrl)} className="mt-2 mb-2">
+                  <Image source={{ uri: att.fileUrl }} className="w-full h-48 rounded-xl bg-gray-100" resizeMode="cover" />
+                </Pressable>
+              );
+            }
+
+            return (
+              <Pressable
+                key={att.id}
+                onPress={() => handleOpenAttachment(att.fileUrl)}
+                className="flex-row items-center bg-white border border-gray-200 rounded-xl p-2.5 mb-1.5"
+              >
+                <Ionicons name="document-attach" size={16} color="#7C3AED" />
+                <Text className="flex-1 text-xs font-medium text-purple-700 ml-2" numberOfLines={1}>
+                  {att.title}
+                </Text>
+                <Ionicons name="open-outline" size={16} color="#7C3AED" />
+              </Pressable>
+            );
+          })}
         </View>
       )}
     </View>

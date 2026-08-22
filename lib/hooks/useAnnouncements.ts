@@ -6,7 +6,7 @@ export interface AnnouncementAttachment {
   announcementId: string;
   title: string;
   fileUrl: string;
-  fileType: string;
+  attachmentType: string;
   fileSize: number | null;
   createdAt: string;
 }
@@ -18,7 +18,7 @@ export interface Announcement {
   courseId: string;
   courseTitle?: string | null;
   title: string;
-  message: string;
+  content: string;
   publishAt: string | null;
   targetingType: "all" | "course" | "students";
   createdAt: string;
@@ -32,8 +32,6 @@ export interface CreateAnnouncementInput {
   message: string;
   publishAt?: string;
   targetingType?: "all" | "course" | "students";
-  fileUrl?: string;
-  fileName?: string;
 }
 
 export function useAnnouncements(courseId: string | undefined) {
@@ -53,24 +51,13 @@ export function useCreateAnnouncement() {
 
   return useMutation({
     mutationFn: async (input: CreateAnnouncementInput) => {
-      const { fileUrl, fileName, message, ...restBody } = input;
+      const { message, ...restBody } = input;
       const body = {
         ...restBody,
         content: message,
       };
       const response = await api.post<{ success: boolean; data: Announcement }>("/announcements", body);
-      const announcement = response.data.data;
-
-      // If file attachment provided, attach it to the created announcement
-      if (fileUrl && fileName && announcement?.id) {
-        await api.post(`/announcements/${announcement.id}/attachments`, {
-          title: fileName,
-          fileUrl,
-          attachmentType: fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "image" : "file",
-        });
-      }
-
-      return announcement;
+      return response.data.data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["announcements", variables.courseId] });
