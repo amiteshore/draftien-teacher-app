@@ -19,7 +19,6 @@ export default function Layout() {
           title: "My Courses",
         }}
       />
-      <Stack.Screen name="course-form" options={{ title: "Create Course" }} />
       <Stack.Screen name="details" options={{ title: "Course Details" }} />
       <Stack.Screen name="edit" options={{ title: "Edit Course" }} />
 

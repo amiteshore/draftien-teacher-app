@@ -360,12 +360,6 @@ export default function HomeScreen() {
               <Text className="text-sm text-gray-500 text-center mb-5">
                 Create your first course to start teaching
               </Text>
-              <Pressable
-                onPress={() => router.push("/(tabs)/courses/course-form")}
-                className="bg-blue-600 px-6 py-3 rounded-xl"
-              >
-                <Text className="text-white font-semibold">Create Course</Text>
-              </Pressable>
             </View>
           )}
         </>
