@@ -1,11 +1,11 @@
 import { useCourses } from "@/lib/hooks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View, RefreshControl } from "react-native";
 
 export default function Courses() {
   const router = useRouter();
-  const { data: courses = [], isLoading, error, refetch } = useCourses();
+  const { data: courses = [], isLoading, error, refetch, isRefetching } = useCourses();
 
   if (isLoading) {
     return (
@@ -50,6 +50,7 @@ export default function Courses() {
         data={courses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />}
         renderItem={({ item }) => (
           <Pressable
             onPress={() =>

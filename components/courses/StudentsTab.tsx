@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   View,
+  RefreshControl,
 } from "react-native";
 
 function getInitials(name?: string | null) {
@@ -62,7 +63,7 @@ type Props = {
 
 export function StudentsTab({ courseId }: Props) {
   const [search, setSearch] = useState("");
-  const { data: studentsData, isLoading, error, refetch } = useCourseStudents(courseId);
+  const { data: studentsData, isLoading, error, refetch, isRefetching } = useCourseStudents(courseId);
   const students = studentsData?.data || [];
 
   const filteredStudents = students.filter(
@@ -123,6 +124,7 @@ export function StudentsTab({ courseId }: Props) {
           renderItem={({ item }) => <StudentRow student={item} />}
           contentContainerStyle={{ paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />}
         />
       ) : (
         <View className="items-center py-16">

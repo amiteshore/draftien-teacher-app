@@ -2,11 +2,11 @@ import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/lib/hooks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View, RefreshControl } from "react-native";
 
 export default function YouScreen() {
   const { logout } = useAuth();
-  const { data: profile, isLoading, error, refetch } = useProfile();
+  const { data: profile, isLoading, error, refetch, isRefetching } = useProfile();
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -89,6 +89,7 @@ export default function YouScreen() {
         paddingBottom: 100,
       }}
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />}
     >
       {/* PROFILE CARD */}
       <View className="bg-white rounded-3xl p-5 border border-[#EEF2FF] overflow-hidden">

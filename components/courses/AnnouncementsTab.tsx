@@ -15,6 +15,7 @@ import {
   Text,
   View,
   Image,
+  RefreshControl,
 } from "react-native";
 
 type CardProps = {
@@ -120,7 +121,7 @@ type Props = {
 };
 
 export function AnnouncementsTab({ courseId, router }: Props) {
-  const { data: announcementsData, isLoading, error, refetch } = useAnnouncements(courseId);
+  const { data: announcementsData, isLoading, error, refetch, isRefetching } = useAnnouncements(courseId);
   const announcements = announcementsData?.data || [];
 
   if (isLoading) {
@@ -147,6 +148,7 @@ export function AnnouncementsTab({ courseId, router }: Props) {
       className="flex-1"
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#D97706" />}
     >
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">

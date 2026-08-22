@@ -11,12 +11,13 @@ import {
   Switch,
   Text,
   View,
+  RefreshControl,
 } from "react-native";
 
 export default function CourseDetails() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: course, isLoading, error, refetch } = useCourse(id);
+  const { data: course, isLoading, error, refetch, isRefetching } = useCourse(id);
   const updateCourse = useUpdateCourse(id || "");
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
@@ -52,6 +53,7 @@ export default function CourseDetails() {
       className="flex-1 bg-white"
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />}
     >
       {/* Thumbnail */}
       {course.thumbnailUrl ? (

@@ -19,7 +19,7 @@ import {
 
 export default function Notifications() {
   const [page] = useState(1);
-  const { data, isLoading, error, refetch } = useNotifications(page, 20, false);
+  const { data, isLoading, error, refetch, isRefetching } = useNotifications(page, 20, false);
   const markAsRead = useMarkNotificationRead();
   const markAllAsRead = useMarkAllNotificationsRead();
   const deleteNotification = useDeleteNotification();
@@ -133,7 +133,7 @@ export default function Notifications() {
         data={data.data}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />}
         renderItem={({ item }) => {
           const icon = getNotificationIcon(item.type);
           return (

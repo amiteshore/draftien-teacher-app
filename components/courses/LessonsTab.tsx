@@ -2,7 +2,7 @@ import { LessonAccordion } from "@/components/courses/LessonAccordion";
 import { useLessons } from "@/lib/hooks/useLessons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { Router } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View, RefreshControl } from "react-native";
 
 type Props = {
   courseId: string;
@@ -10,7 +10,7 @@ type Props = {
 };
 
 export function LessonsTab({ courseId, router }: Props) {
-  const { data: lessons = [], isLoading, error, refetch } = useLessons(courseId);
+  const { data: lessons = [], isLoading, error, refetch, isRefetching } = useLessons(courseId);
 
   if (isLoading) {
     return (
@@ -36,6 +36,7 @@ export function LessonsTab({ courseId, router }: Props) {
       className="flex-1"
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#2563EB" />}
     >
       {/* Header row */}
       <View className="flex-row items-center justify-between mb-4">
