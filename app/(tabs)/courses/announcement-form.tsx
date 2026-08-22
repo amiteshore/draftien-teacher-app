@@ -1,5 +1,5 @@
 import { useCreateAnnouncement } from "@/lib/hooks/useAnnouncements";
-import { uploadFileToSignedUrl, usePdfUpload } from "@/lib/hooks/useUpload";
+import { uploadFileToSignedUrl, usePdfUpload, useImageUpload } from "@/lib/hooks/useUpload";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as DocumentPicker from "expo-document-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -21,6 +21,7 @@ export default function AnnouncementForm() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
   const createAnnouncement = useCreateAnnouncement();
   const pdfUpload = usePdfUpload();
+  const imageUpload = useImageUpload();
 
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -36,12 +37,16 @@ export default function AnnouncementForm() {
       if (result.canceled) return;
       const file = result.assets[0];
       setUploading(true);
-      const { uploadUrl, publicUrl } = await pdfUpload.mutateAsync({
+
+      const isImage = file.mimeType?.startsWith("image/");
+      const uploader = isImage ? imageUpload : pdfUpload;
+
+      const { uploadUrl, publicUrl } = await uploader.mutateAsync({
         fileName: file.name,
-        contentType: file.mimeType || "application/pdf",
+        contentType: file.mimeType || (isImage ? "image/jpeg" : "application/pdf"),
       });
       const fileBlob = await fetch(file.uri).then((r) => r.blob());
-      await uploadFileToSignedUrl(uploadUrl, fileBlob, file.mimeType || "application/pdf");
+      await uploadFileToSignedUrl(uploadUrl, fileBlob, file.mimeType || (isImage ? "image/jpeg" : "application/pdf"));
       setAttachment({ name: file.name, url: publicUrl });
     } catch {
       Alert.alert("Error", "Failed to upload attachment");

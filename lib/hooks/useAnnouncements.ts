@@ -53,7 +53,11 @@ export function useCreateAnnouncement() {
 
   return useMutation({
     mutationFn: async (input: CreateAnnouncementInput) => {
-      const { fileUrl, fileName, ...body } = input;
+      const { fileUrl, fileName, message, ...restBody } = input;
+      const body = {
+        ...restBody,
+        content: message,
+      };
       const response = await api.post<{ success: boolean; data: Announcement }>("/announcements", body);
       const announcement = response.data.data;
 
@@ -62,7 +66,7 @@ export function useCreateAnnouncement() {
         await api.post(`/announcements/${announcement.id}/attachments`, {
           title: fileName,
           fileUrl,
-          fileType: fileUrl.endsWith(".pdf") ? "pdf" : "file",
+          attachmentType: fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "image" : "file",
         });
       }
 
