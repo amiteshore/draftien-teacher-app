@@ -1,12 +1,11 @@
 import { AnnouncementsTab } from "@/components/courses/AnnouncementsTab";
 import { LessonsTab } from "@/components/courses/LessonsTab";
-import { QuizzesTab } from "@/components/courses/QuizzesTab";
 import { StudentsTab } from "@/components/courses/StudentsTab";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
-type Tab = "lessons" | "quizzes" | "announcements" | "students";
+type Tab = "lessons" | "announcements" | "students";
 
 export default function CourseContent() {
   const router = useRouter();
@@ -39,25 +38,6 @@ export default function CourseContent() {
           </Text>
         </Pressable>
 
-        <Pressable
-          onPress={() => setActiveTab("quizzes")}
-          className={`flex-1 py-2.5 rounded-xl items-center ${
-            activeTab === "quizzes" ? "bg-white" : ""
-          }`}
-          style={
-            activeTab === "quizzes"
-              ? { shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2 }
-              : undefined
-          }
-        >
-          <Text
-            className={`text-xs font-bold ${
-              activeTab === "quizzes" ? "text-purple-600" : "text-gray-500"
-            }`}
-          >
-            Quizzes
-          </Text>
-        </Pressable>
 
         <Pressable
           onPress={() => setActiveTab("announcements")}
@@ -104,8 +84,6 @@ export default function CourseContent() {
       {courseId ? (
         activeTab === "lessons" ? (
           <LessonsTab courseId={courseId} router={router} />
-        ) : activeTab === "quizzes" ? (
-          <QuizzesTab courseId={courseId} router={router} />
         ) : activeTab === "announcements" ? (
           <AnnouncementsTab courseId={courseId} router={router} />
         ) : (

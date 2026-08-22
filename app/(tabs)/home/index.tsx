@@ -286,10 +286,7 @@ export default function HomeScreen() {
                       <Ionicons name="book-outline" size={14} color="#6B7280" />
                       <Text className="text-sm text-gray-500">{course.lessonCount} lessons</Text>
                     </View>
-                    <View className="flex-row items-center gap-1">
-                      <Ionicons name="help-circle-outline" size={14} color="#6B7280" />
-                      <Text className="text-sm text-gray-500">{course.quizCount} quizzes</Text>
-                    </View>
+
                     <Text className="text-sm text-blue-600 font-semibold ml-auto">
                       {(course.avgProgress ?? 0).toFixed(0)}% avg
                     </Text>
@@ -329,39 +326,6 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* ── Quiz health ── */}
-          {quizStats.length > 0 && (
-            <View className="px-4 mt-6">
-              <SectionHeader title="Quiz Performance" />
-              <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                {quizStats.slice(0, 4).map((q, i) => (
-                  <View
-                    key={q.id}
-                    className={`px-4 py-3 ${i < Math.min(quizStats.length, 4) - 1 ? "border-b border-gray-50" : ""}`}
-                  >
-                    <View className="flex-row items-center justify-between mb-1">
-                      <Text className="text-base font-semibold text-gray-900 flex-1 mr-2" numberOfLines={1}>
-                        {q.title}
-                      </Text>
-                      <Text className="text-sm text-gray-500">{q.totalAttempts} attempts</Text>
-                    </View>
-                    <View className="flex-row items-center gap-3">
-                      <View className="flex-1 h-1.5 bg-gray-100 rounded-full">
-                        <View
-                          className="h-1.5 bg-purple-500 rounded-full"
-                          style={{ width: `${Math.min(q.passRate, 100)}%` }}
-                        />
-                      </View>
-                      <Text className="text-sm font-semibold text-purple-600 w-14 text-right">
-                        {q.passRate.toFixed(0)}% pass
-                      </Text>
-                    </View>
-                    <Text className="text-sm text-gray-400 mt-0.5">{q.courseTitle}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
 
           {/* ── At-risk students ── */}
           {atRiskStudents.length > 0 && (
@@ -403,43 +367,6 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* ── Recent quiz attempts ── */}
-          {recentQuizAttempts.length > 0 && (
-            <View className="px-4 mt-6">
-              <SectionHeader title="Recent Quiz Attempts" />
-              <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                {recentQuizAttempts.slice(0, 5).map((a, i) => (
-                  <View
-                    key={a.id}
-                    className={`flex-row items-center px-4 py-3 ${i < 4 ? "border-b border-gray-50" : ""}`}
-                  >
-                    <View
-                      className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${a.isPassed ? "bg-green-100" : "bg-red-100"}`}
-                    >
-                      <Ionicons
-                        name={a.isPassed ? "checkmark" : "close"}
-                        size={16}
-                        color={a.isPassed ? "#059669" : "#EF4444"}
-                      />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
-                        {a.studentName || "Student"}
-                      </Text>
-                      <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={1}>
-                        {a.quizTitle} · {a.courseTitle}
-                      </Text>
-                    </View>
-                    <Text
-                      className={`text-sm font-bold ${a.isPassed ? "text-green-600" : "text-red-500"}`}
-                    >
-                      {a.score.toFixed(0)}%
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
 
           {/* ── Empty state ── */}
           {courses.length === 0 && (

@@ -23,7 +23,7 @@ export default function Layout() {
       <Stack.Screen name="details" options={{ title: "Course Details" }} />
       <Stack.Screen name="edit" options={{ title: "Edit Course" }} />
 
-      {/* Content management screen (lessons + quizzes tabs) */}
+      {/* Content management screen (lessons tabs) */}
       <Stack.Screen name="course-content" options={{ title: "Course Content" }} />
 
       {/* Lecture viewer — full screen */}
@@ -44,9 +44,6 @@ export default function Layout() {
       {/* Note screens */}
       <Stack.Screen name="note-form" options={{ title: "Add Note" }} />
 
-      {/* Quiz screens */}
-      <Stack.Screen name="quiz-form" options={{ title: "Create Quiz" }} />
-      <Stack.Screen name="quiz-details" options={{ title: "Quiz Details" }} />
 
       {/* Live Class & Announcements screens */}
       <Stack.Screen name="live-class-form" options={{ title: "Schedule Live Class" }} />

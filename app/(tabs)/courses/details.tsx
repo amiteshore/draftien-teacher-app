@@ -150,7 +150,7 @@ export default function CourseDetails() {
           ) : null}
         </View>
 
-        {/* ── Content nav buttons (Row 1: Lessons & Quizzes) ── */}
+        {/* ── Content nav buttons (Row 1: Lessons) ── */}
         <View className="flex-row gap-3 mt-5">
           <Pressable
             onPress={() =>
@@ -166,22 +166,6 @@ export default function CourseDetails() {
             </View>
             <Text className="text-white font-bold text-base">Lessons</Text>
             <Text className="text-blue-100 text-xs">Manage content</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/courses/course-content",
-                params: { courseId: id, initialTab: "quizzes" },
-              })
-            }
-            className="flex-1 bg-purple-600 rounded-2xl p-4 items-center gap-2"
-          >
-            <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-              <Ionicons name="help-circle-outline" size={22} color="#FFFFFF" />
-            </View>
-            <Text className="text-white font-bold text-base">Quizzes</Text>
-            <Text className="text-purple-100 text-xs">Manage assessments</Text>
           </Pressable>
         </View>
 
